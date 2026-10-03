@@ -1,0 +1,3 @@
+# Entry Rate is snapshotted, not a live reference to Job Default Rate
+
+An Entry's Rate is copied from the Job's Job Default Rate at creation time (or set as an explicit override) and never changes afterward, even if the Job's Job Default Rate later changes. The alternative — always computing pay from the Job's *current* rate — would silently rewrite historical Gross Income every time a rate changes (e.g. after a raise), which is surprising and wrong for past pay periods. The tradeoff is that correcting a rate mistake on past Entries requires editing them individually rather than fixing it once on the Job.
