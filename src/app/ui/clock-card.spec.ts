@@ -65,6 +65,58 @@ describe('ClockCardComponent', () => {
     });
   });
 
+  // ─── all Jobs archived ────────────────────────────────────────────────────────
+
+  describe('all Jobs archived', () => {
+    it('shows "All Jobs are archived" text', () => {
+      const { fixture, store } = setup();
+      const job = store.addJob('Old Client', 25);
+      store.setArchived(job.id, true);
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).textContent).toContain('All Jobs are archived');
+    });
+
+    it('shows Manage Jobs button', () => {
+      const { fixture, store } = setup();
+      const job = store.addJob('Old Client', 25);
+      store.setArchived(job.id, true);
+      fixture.detectChanges();
+      expect(btn(fixture.nativeElement as HTMLElement, 'Manage Jobs')).not.toBeNull();
+    });
+
+    it('Manage Jobs button opens settings', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Old Client', 25);
+      store.setArchived(job.id, true);
+      fixture.detectChanges();
+      btn(fixture.nativeElement as HTMLElement, 'Manage Jobs')!.click();
+      fixture.detectChanges();
+      expect(ui.settingsOpen()).toBe(true);
+    });
+
+    it('does not show "Create your first Job"', () => {
+      const { fixture, store } = setup();
+      const job = store.addJob('Old Client', 25);
+      store.setArchived(job.id, true);
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
+        'Create your first Job',
+      );
+    });
+
+    it('renders no Clock In buttons', () => {
+      const { fixture, store } = setup();
+      const job = store.addJob('Old Client', 25);
+      store.setArchived(job.id, true);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      const clockInBtns = Array.from(el.querySelectorAll('button')).filter((b) =>
+        b.textContent?.includes('Clock In'),
+      );
+      expect(clockInBtns).toHaveLength(0);
+    });
+  });
+
   // ─── idle — no Live Session ───────────────────────────────────────────────────
 
   describe('idle — no Live Session', () => {
@@ -105,6 +157,14 @@ describe('ClockCardComponent', () => {
       const el = fixture.nativeElement as HTMLElement;
       expect(btn(el, 'Clock Out')).toBeNull();
       expect(el.querySelector('[data-testid="elapsed"]')).toBeNull();
+    });
+
+    it('renders card container', () => {
+      const { fixture, store } = setup();
+      store.addJob('Acme', 25);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('.rounded-2xl.bg-stone-800.p-6')).not.toBeNull();
     });
   });
 
@@ -204,6 +264,41 @@ describe('ClockCardComponent', () => {
         b.textContent?.includes('Clock In'),
       );
       expect(clockInBtns).toHaveLength(0);
+    });
+
+    it('renders card container', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2024, 0, 10, 9, 0, 0));
+      const { fixture, store } = setup();
+      const job = store.addJob('Acme', 25);
+      store.clockIn(job.id);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('.rounded-2xl.bg-stone-800.p-6')).not.toBeNull();
+    });
+
+    it('elapsed element has text-5xl class', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2024, 0, 10, 9, 0, 0));
+      const { fixture, store } = setup();
+      const job = store.addJob('Acme', 25);
+      store.clockIn(job.id);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      const elapsed = el.querySelector('[data-testid="elapsed"]') as HTMLElement;
+      expect(elapsed.classList.contains('text-5xl')).toBe(true);
+    });
+
+    it('elapsed element has sm:text-7xl class', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2024, 0, 10, 9, 0, 0));
+      const { fixture, store } = setup();
+      const job = store.addJob('Acme', 25);
+      store.clockIn(job.id);
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      const elapsed = el.querySelector('[data-testid="elapsed"]') as HTMLElement;
+      expect(elapsed.classList.contains('sm:text-7xl')).toBe(true);
     });
   });
 
