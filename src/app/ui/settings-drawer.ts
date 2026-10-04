@@ -187,6 +187,37 @@ interface JobFormValues {
           </div>
         </details>
       }
+
+      <h2 class="mt-8 mb-3 text-lg font-semibold text-stone-100">Data</h2>
+
+      <div class="flex flex-col gap-4 rounded-lg border border-stone-700 bg-stone-700/30 p-4">
+        <button
+          type="button"
+          class="self-start rounded bg-amber-300 px-5 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-200"
+          (click)="exportJson()"
+        >
+          Export JSON
+        </button>
+
+        <label class="flex flex-col gap-1 text-sm text-stone-400">
+          <span>Import JSON</span>
+          <input
+            aria-label="Import JSON"
+            type="file"
+            accept="application/json,.json"
+            class="text-sm text-stone-400 file:mr-3 file:cursor-pointer file:rounded file:border-0 file:bg-stone-600 file:px-3 file:py-1.5 file:text-stone-100 file:transition-colors hover:file:bg-stone-500"
+            (change)="onImport($event)"
+          />
+        </label>
+
+        <button
+          type="button"
+          class="self-start rounded border border-red-500/40 px-5 py-2 text-sm text-red-400 transition-colors hover:border-red-400 hover:text-red-300"
+          (click)="clearAll()"
+        >
+          Clear all data
+        </button>
+      </div>
     </app-drawer>
   `,
 })
@@ -270,6 +301,57 @@ export class SettingsDrawerComponent {
   close(): void {
     this.clearError();
     this.ui.closeSettings();
+  }
+
+  // ── data (export / import / clear) ───────────────────────
+  exportJson(): void {
+    const json = this.store.exportJson();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'timesheet-backup.json';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+    this.clearError();
+  }
+
+  onImport(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (file === null) return;
+    if (window.confirm('Replace all data?') === false) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const text = (e.target?.result ?? '') as string;
+      try {
+        this.store.importJson(text);
+        this.clearError();
+      } catch (err) {
+        this.error.set(err instanceof Error ? err.message : String(err));
+      }
+    };
+    reader.onerror = () => {
+      this.error.set('Could not read the file');
+    };
+    reader.readAsText(file);
+  }
+
+  clearAll(): void {
+    if (window.confirm('Clear all data?') === false) {
+      return;
+    }
+    try {
+      this.store.clearAll();
+      this.clearError();
+    } catch (err) {
+      this.error.set(err instanceof Error ? err.message : String(err));
+    }
   }
 
   // ── form plumbing ────────────────────────────────────────
