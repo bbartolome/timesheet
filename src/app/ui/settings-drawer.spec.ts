@@ -109,7 +109,7 @@ describe('SettingsDrawerComponent', () => {
       fixture.detectChanges();
 
       setField(field(root(fixture), 'Name') as HTMLInputElement, 'Acme');
-      setField(field(root(fixture), 'Rate') as HTMLInputElement, '25');
+      setField(field(root(fixture), 'Job Default Rate') as HTMLInputElement, '25');
       fixture.detectChanges();
 
       btn(root(fixture), 'Add Job')!.click();
@@ -124,7 +124,7 @@ describe('SettingsDrawerComponent', () => {
       fixture.detectChanges();
 
       setField(field(root(fixture), 'Name') as HTMLInputElement, 'Bravo Corp');
-      setField(field(root(fixture), 'Rate') as HTMLInputElement, '40');
+      setField(field(root(fixture), 'Job Default Rate') as HTMLInputElement, '40');
       fixture.detectChanges();
 
       btn(root(fixture), 'Add Job')!.click();
@@ -139,7 +139,7 @@ describe('SettingsDrawerComponent', () => {
       fixture.detectChanges();
 
       setField(field(root(fixture), 'Name') as HTMLInputElement, 'Acme');
-      setField(field(root(fixture), 'Rate') as HTMLInputElement, '25');
+      setField(field(root(fixture), 'Job Default Rate') as HTMLInputElement, '25');
       const anchorInput = field(root(fixture), 'Pay Period Anchor') as HTMLInputElement;
       setField(anchorInput, '2024-01-01T09:00');
       const freqSelect = field(root(fixture), 'Frequency') as HTMLSelectElement;
@@ -500,6 +500,222 @@ describe('SettingsDrawerComponent', () => {
       fixture.detectChanges();
 
       expect(store.jobs().length).toBe(0);
+    });
+  });
+
+  // ─── 'Job Default Rate' label ─────────────────────────────────────────────────
+
+  describe("'Job Default Rate' label", () => {
+    it('add-Job form rate input is labelled "Job Default Rate"', () => {
+      const { fixture, ui } = setup();
+      ui.openSettings();
+      fixture.detectChanges();
+
+      expect(field(root(fixture), 'Job Default Rate')).not.toBeNull();
+    });
+
+    it('archived-Job rate input is labelled "Job Default Rate"', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 30);
+      store.setArchived(job.id, true);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const details = root(fixture).querySelector('details') as HTMLElement;
+      expect(field(details, 'Job Default Rate')).not.toBeNull();
+    });
+  });
+
+  // ─── archived Job editing ─────────────────────────────────────────────────────
+
+  describe('archived Job editing', () => {
+    it('archived Job name can be renamed and saved', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('OldName', 30);
+      store.setArchived(job.id, true);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const details = root(fixture).querySelector('details') as HTMLElement;
+      const nameInput = inputWithValue(details, 'OldName')!;
+      setField(nameInput, 'NewName');
+      fixture.detectChanges();
+
+      btn(details, 'Save')!.click();
+      fixture.detectChanges();
+
+      expect(store.jobs().some((j) => j.name === 'NewName')).toBe(true);
+      expect(store.jobs().some((j) => j.name === 'OldName')).toBe(false);
+    });
+
+    it('archived Job Default Rate can be changed and saved', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 30);
+      store.setArchived(job.id, true);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const details = root(fixture).querySelector('details') as HTMLElement;
+      const rateInput = inputWithValue(details, '30')!;
+      setField(rateInput, '75');
+      fixture.detectChanges();
+
+      btn(details, 'Save')!.click();
+      fixture.detectChanges();
+
+      expect(store.archivedJobs()[0].defaultRate).toBe(75);
+    });
+
+    it('changing an archived Job Default Rate does not alter existing Entry rates (ADR-0002)', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-03-01T12:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 30);
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-03-01T09:00:00.000Z',
+        end: '2024-03-01T10:00:00.000Z',
+      });
+      store.setArchived(job.id, true);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const details = root(fixture).querySelector('details') as HTMLElement;
+      const rateInput = inputWithValue(details, '30')!;
+      setField(rateInput, '99');
+      fixture.detectChanges();
+
+      btn(details, 'Save')!.click();
+      fixture.detectChanges();
+
+      expect(store.entries()[0].rate).toBe(30);
+    });
+
+    it('archived Job Pay Period can be set and saved', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 30);
+      store.setArchived(job.id, true);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const details = root(fixture).querySelector('details') as HTMLElement;
+      const anchorInput = field(details, 'Pay Period Anchor') as HTMLInputElement;
+      setField(anchorInput, '2024-06-03T09:00');
+      const freqSelect = field(details, 'Frequency') as HTMLSelectElement;
+      setField(freqSelect, 'Monthly');
+      fixture.detectChanges();
+
+      btn(details, 'Save')!.click();
+      fixture.detectChanges();
+
+      const updated = store.jobs().find((j) => j.id === job.id);
+      expect(updated?.payPeriod).not.toBeNull();
+      expect(updated?.payPeriod?.frequency).toBe('Monthly');
+    });
+  });
+
+  // ─── negative rate ────────────────────────────────────────────────────────────
+
+  describe('negative rate', () => {
+    it('negative Job Default Rate in add-Job form shows [role="alert"]', () => {
+      const { fixture, ui } = setup();
+      ui.openSettings();
+      fixture.detectChanges();
+
+      setField(field(root(fixture), 'Name') as HTMLInputElement, 'Acme');
+      setField(field(root(fixture), 'Job Default Rate') as HTMLInputElement, '-10');
+      fixture.detectChanges();
+
+      btn(root(fixture), 'Add Job')!.click();
+      fixture.detectChanges();
+
+      const alert = root(fixture).querySelector('[role="alert"]');
+      expect(alert?.textContent?.trim().length).toBeGreaterThan(0);
+    });
+
+    it('the Job is not added when the rate is negative', () => {
+      const { fixture, store, ui } = setup();
+      ui.openSettings();
+      fixture.detectChanges();
+
+      setField(field(root(fixture), 'Name') as HTMLInputElement, 'Acme');
+      setField(field(root(fixture), 'Job Default Rate') as HTMLInputElement, '-10');
+      fixture.detectChanges();
+
+      btn(root(fixture), 'Add Job')!.click();
+      fixture.detectChanges();
+
+      expect(store.jobs().length).toBe(0);
+    });
+
+    it('negative Job Default Rate on active Job save shows [role="alert"]', () => {
+      const { fixture, store, ui } = setup();
+      store.addJob('Acme', 30);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const rateInput = inputWithValue(root(fixture), '30')!;
+      setField(rateInput, '-5');
+      fixture.detectChanges();
+
+      btn(root(fixture), 'Save')!.click();
+      fixture.detectChanges();
+
+      const alert = root(fixture).querySelector('[role="alert"]');
+      expect(alert?.textContent?.trim().length).toBeGreaterThan(0);
+    });
+
+    it('active Job rate is unchanged when the negative rate save is blocked', () => {
+      const { fixture, store, ui } = setup();
+      store.addJob('Acme', 30);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const rateInput = inputWithValue(root(fixture), '30')!;
+      setField(rateInput, '-5');
+      fixture.detectChanges();
+
+      btn(root(fixture), 'Save')!.click();
+      fixture.detectChanges();
+
+      expect(store.activeJobs()[0].defaultRate).toBe(30);
+    });
+
+    it('negative Job Default Rate on archived Job save shows [role="alert"]', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 30);
+      store.setArchived(job.id, true);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const details = root(fixture).querySelector('details') as HTMLElement;
+      const rateInput = inputWithValue(details, '30')!;
+      setField(rateInput, '-5');
+      fixture.detectChanges();
+
+      btn(details, 'Save')!.click();
+      fixture.detectChanges();
+
+      const alert = root(fixture).querySelector('[role="alert"]');
+      expect(alert?.textContent?.trim().length).toBeGreaterThan(0);
+    });
+
+    it('archived Job rate is unchanged when the negative rate save is blocked', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 30);
+      store.setArchived(job.id, true);
+      ui.openSettings();
+      fixture.detectChanges();
+
+      const details = root(fixture).querySelector('details') as HTMLElement;
+      const rateInput = inputWithValue(details, '30')!;
+      setField(rateInput, '-5');
+      fixture.detectChanges();
+
+      btn(details, 'Save')!.click();
+      fixture.detectChanges();
+
+      expect(store.archivedJobs()[0].defaultRate).toBe(30);
     });
   });
 });
