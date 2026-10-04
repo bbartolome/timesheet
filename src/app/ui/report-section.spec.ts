@@ -389,7 +389,7 @@ describe('ReportSectionComponent', () => {
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
 
-      const createObjectURL = vi.fn(() => 'blob:mock-url');
+      const createObjectURL = vi.fn((_obj: Blob | MediaSource) => 'blob:mock-url');
       const revokeObjectURL = vi.fn();
       Object.defineProperty(globalThis, 'URL', {
         value: { createObjectURL, revokeObjectURL },
@@ -418,7 +418,7 @@ describe('ReportSectionComponent', () => {
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
 
-      const createObjectURL = vi.fn(() => 'blob:mock-url');
+      const createObjectURL = vi.fn((_obj: Blob | MediaSource) => 'blob:mock-url');
       Object.defineProperty(globalThis, 'URL', {
         value: { createObjectURL, revokeObjectURL: vi.fn() },
         writable: true,
@@ -444,7 +444,7 @@ describe('ReportSectionComponent', () => {
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
 
-      const createObjectURL = vi.fn(() => 'blob:mock-url');
+      const createObjectURL = vi.fn((_obj: Blob | MediaSource) => 'blob:mock-url');
       Object.defineProperty(globalThis, 'URL', {
         value: { createObjectURL, revokeObjectURL: vi.fn() },
         writable: true,

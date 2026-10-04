@@ -110,7 +110,7 @@ describe('parseData rejection cases', () => {
 
   describe('schemaVersion', () => {
     it('throws when schemaVersion is missing', () => {
-      const d = validData() as Record<string, unknown>;
+      const d = validData() as unknown as Record<string, unknown>;
       delete d['schemaVersion'];
       expect(() => parseData(JSON.stringify(d))).toThrow();
     });
@@ -130,7 +130,7 @@ describe('parseData rejection cases', () => {
 
   describe('jobs', () => {
     it('throws when jobs is missing', () => {
-      const d = validData() as Record<string, unknown>;
+      const d = validData() as unknown as Record<string, unknown>;
       delete d['jobs'];
       expect(() => parseData(JSON.stringify(d))).toThrow();
     });
@@ -140,7 +140,7 @@ describe('parseData rejection cases', () => {
     });
 
     it('throws when a job is missing id', () => {
-      const j = job() as Record<string, unknown>;
+      const j = job() as unknown as Record<string, unknown>;
       delete j['id'];
       expect(() => parseData(JSON.stringify({ ...validData(), jobs: [j], entries: [] }))).toThrow();
     });
@@ -172,7 +172,7 @@ describe('parseData rejection cases', () => {
 
   describe('entries', () => {
     it('throws when entries is missing', () => {
-      const d = validData() as Record<string, unknown>;
+      const d = validData() as unknown as Record<string, unknown>;
       delete d['entries'];
       expect(() => parseData(JSON.stringify(d))).toThrow();
     });
