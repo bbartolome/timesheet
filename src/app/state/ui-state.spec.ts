@@ -81,7 +81,7 @@ describe('UiState', () => {
       expect(ui.reportJobId()).toBe('ja');
     });
 
-    it('falls back to the Live Session job when stored does not match any job', () => {
+    it('Live Session job is first priority even when stored id is invalid', () => {
       const data: TimesheetData = {
         schemaVersion: SCHEMA_VERSION,
         jobs: [
@@ -103,6 +103,30 @@ describe('UiState', () => {
       localStorage.setItem(REPORT_JOB_KEY, 'invalid-id');
       const { ui } = freshState();
       expect(ui.reportJobId()).toBe('j2');
+    });
+
+    it('Live Session job takes precedence over a valid stored REPORT_JOB_KEY', () => {
+      const data: TimesheetData = {
+        schemaVersion: SCHEMA_VERSION,
+        jobs: [
+          { id: 'j1', name: 'Alpha', defaultRate: 20, payPeriod: null, archived: false },
+          { id: 'j2', name: 'Beta', defaultRate: 30, payPeriod: null, archived: false },
+        ],
+        entries: [
+          {
+            id: 'live',
+            jobId: 'j2',
+            start: new Date(2024, 0, 10, 9, 0, 0).toISOString(),
+            end: null,
+            rate: 30,
+            note: '',
+          },
+        ],
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(REPORT_JOB_KEY, 'j1'); // stored points to j1, but live session is on j2
+      const { ui } = freshState();
+      expect(ui.reportJobId()).toBe('j2'); // Live Session wins
     });
 
     it('falls back to the jobId of the entry with the latest start when stored is null and no Live Session', () => {
@@ -247,6 +271,85 @@ describe('UiState', () => {
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       expect(ui.range()).toEqual({ start: null, end: null });
+    });
+
+    it('returns null for custom filter with an empty from date', () => {
+      const { store, ui } = freshState();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '', to: '2024-01-25' });
+      expect(ui.range()).toBeNull();
+    });
+
+    it('returns null for custom filter with an empty to date', () => {
+      const { store, ui } = freshState();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '2024-01-20', to: '' });
+      expect(ui.range()).toBeNull();
+    });
+
+    it('returns null for custom filter when to is before from', () => {
+      const { store, ui } = freshState();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '2024-01-25', to: '2024-01-20' });
+      expect(ui.range()).toBeNull();
+    });
+  });
+
+  // ─── pay-period filter auto-reset ────────────────────────────────────────────
+
+  describe('pay-period filter auto-reset', () => {
+    it('resets filter to thisWeek when switching to a job with no payPeriod while filter is currentPayPeriod', () => {
+      const { store, ui } = freshState();
+      const jobWithPeriod = store.addJob('With Period', 25, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Biweekly',
+      });
+      const jobNoPeriod = store.addJob('No Period', 30);
+      ui.setReportJob(jobWithPeriod.id);
+      ui.filter.set({ kind: 'currentPayPeriod' });
+
+      ui.setReportJob(jobNoPeriod.id);
+      TestBed.flushEffects();
+
+      expect(ui.filter()).toEqual({ kind: 'thisWeek' });
+    });
+
+    it('resets filter to thisWeek when switching to a job with no payPeriod while filter is pastPayPeriod', () => {
+      const { store, ui } = freshState();
+      const jobWithPeriod = store.addJob('With Period', 25, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Monthly',
+      });
+      const jobNoPeriod = store.addJob('No Period', 30);
+      ui.setReportJob(jobWithPeriod.id);
+      ui.filter.set({ kind: 'pastPayPeriod' });
+
+      ui.setReportJob(jobNoPeriod.id);
+      TestBed.flushEffects();
+
+      expect(ui.filter()).toEqual({ kind: 'thisWeek' });
+    });
+
+    it('does not reset filter when switching to a job that also has a payPeriod', () => {
+      const { store, ui } = freshState();
+      const job1 = store.addJob('Job 1', 25, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Biweekly',
+      });
+      const job2 = store.addJob('Job 2', 30, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Monthly',
+      });
+      ui.setReportJob(job1.id);
+      ui.filter.set({ kind: 'currentPayPeriod' });
+
+      ui.setReportJob(job2.id);
+      TestBed.flushEffects();
+
+      expect(ui.filter()).toEqual({ kind: 'currentPayPeriod' });
     });
   });
 
