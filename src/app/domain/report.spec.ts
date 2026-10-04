@@ -65,6 +65,26 @@ describe('resolveRange', () => {
       expect(range?.start).toBe(new Date(2024, 0, 10, 0, 0, 0).getTime());
       expect(range?.end).toBe(new Date(2024, 0, 11, 0, 0, 0).getTime());
     });
+
+    it('returns null when from is empty', () => {
+      expect(resolveRange({ kind: 'custom', from: '', to: '2024-01-12' }, j, NOW)).toBeNull();
+    });
+
+    it('returns null when to is empty', () => {
+      expect(resolveRange({ kind: 'custom', from: '2024-01-10', to: '' }, j, NOW)).toBeNull();
+    });
+
+    it('returns null when from is not a valid yyyy-mm-dd', () => {
+      expect(resolveRange({ kind: 'custom', from: 'not-a-date', to: '2024-01-12' }, j, NOW)).toBeNull();
+    });
+
+    it('returns null when to is not a valid yyyy-mm-dd', () => {
+      expect(resolveRange({ kind: 'custom', from: '2024-01-10', to: '2024/01/12' }, j, NOW)).toBeNull();
+    });
+
+    it('returns null when to is before from', () => {
+      expect(resolveRange({ kind: 'custom', from: '2024-01-12', to: '2024-01-10' }, j, NOW)).toBeNull();
+    });
   });
 
   describe('currentPayPeriod', () => {
@@ -307,6 +327,12 @@ describe('defaultReportJobId', () => {
   it('returns the Live Session jobId when stored is null', () => {
     const live = entry({ id: 'live', jobId: 'j2', start: '2024-01-10T09:00:00.000Z' });
     expect(defaultReportJobId([j1, j2], [live], null)).toBe('j2');
+  });
+
+  it('returns Live Session jobId even when stored matches a job id (Live Session has highest precedence)', () => {
+    const live = entry({ id: 'live', jobId: 'j2', start: '2024-01-10T09:00:00.000Z' });
+    // stored matches j1, but Live Session is on j2 — Live Session wins
+    expect(defaultReportJobId([j1, j2], [live], 'j1')).toBe('j2');
   });
 
   it('prefers the Live Session over the entry with the latest start', () => {
