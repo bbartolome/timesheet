@@ -156,8 +156,8 @@ export class EntryDrawerComponent {
     if (!this.isEdit()) return active;
     const entry = this.editingEntry();
     if (entry !== null) {
-      const current = this.store.jobs().find(j => j.id === entry.jobId);
-      if (current !== undefined && !active.some(j => j.id === current.id)) {
+      const current = this.store.jobs().find((j) => j.id === entry.jobId);
+      if (current !== undefined && !active.some((j) => j.id === current.id)) {
         return [current, ...active];
       }
     }
@@ -196,14 +196,14 @@ export class EntryDrawerComponent {
   private editingEntry(): Entry | null {
     const state = this.ui.entryDrawer();
     if (state === null || state.mode !== 'edit') return null;
-    return this.store.entries().find(e => e.id === state.entryId) ?? null;
+    return this.store.entries().find((e) => e.id === state.entryId) ?? null;
   }
 
   private prefillFor(state: { mode: 'new' } | { mode: 'edit'; entryId: string }): void {
     this.error.set(null);
 
     if (state.mode === 'edit') {
-      const entry = this.store.entries().find(e => e.id === state.entryId);
+      const entry = this.store.entries().find((e) => e.id === state.entryId);
       if (entry === undefined) return;
       this.jobId.set(entry.jobId);
       this.start.set(toDatetimeLocal(entry.start));
@@ -232,7 +232,7 @@ export class EntryDrawerComponent {
     // Refresh the Rate default on Job change (new-entry mode only;
     // the snapshot is immutable while editing).
     if (!this.isEdit()) {
-      const job = this.store.jobs().find(j => j.id === this.jobId());
+      const job = this.store.jobs().find((j) => j.id === this.jobId());
       if (job !== undefined) this.rate.set(String(job.defaultRate));
     }
     this.clearError();

@@ -113,27 +113,34 @@ describe('entriesInRange', () => {
   const RANGE = { start: START_MS, end: END_MS };
 
   const e1 = entry({
-    id: 'e1', jobId: 'j1',
+    id: 'e1',
+    jobId: 'j1',
     start: new Date(2024, 0, 10, 9, 0, 0).toISOString(),
     end: new Date(2024, 0, 10, 11, 0, 0).toISOString(),
   });
   const e2 = entry({
-    id: 'e2', jobId: 'j1',
+    id: 'e2',
+    jobId: 'j1',
     start: new Date(2024, 0, 11, 9, 0, 0).toISOString(),
     end: new Date(2024, 0, 11, 11, 0, 0).toISOString(),
   });
   const e3 = entry({
-    id: 'e3', jobId: 'j2', // different Job
+    id: 'e3',
+    jobId: 'j2', // different Job
     start: new Date(2024, 0, 10, 9, 0, 0).toISOString(),
     end: new Date(2024, 0, 10, 11, 0, 0).toISOString(),
   });
   // Live Session within range
-  const live = entry({ id: 'live', jobId: 'j1', start: new Date(2024, 0, 11, 15, 0, 0).toISOString() });
+  const live = entry({
+    id: 'live',
+    jobId: 'j1',
+    start: new Date(2024, 0, 11, 15, 0, 0).toISOString(),
+  });
 
   it('excludes entries from a different Job', () => {
     const result = entriesInRange([e1, e2, e3, live], 'j1', RANGE);
-    expect(result.every(e => e.jobId === 'j1')).toBe(true);
-    expect(result.find(e => e.id === 'e3')).toBeUndefined();
+    expect(result.every((e) => e.jobId === 'j1')).toBe(true);
+    expect(result.find((e) => e.id === 'e3')).toBeUndefined();
   });
 
   it('sorts results by start descending', () => {
@@ -145,16 +152,18 @@ describe('entriesInRange', () => {
 
   it('includes an entry whose start is exactly at range.start (half-open [start,end))', () => {
     const atStart = entry({
-      id: 'atStart', jobId: 'j1',
+      id: 'atStart',
+      jobId: 'j1',
       start: new Date(START_MS).toISOString(),
       end: new Date(START_MS + 3_600_000).toISOString(),
     });
-    expect(entriesInRange([atStart], 'j1', RANGE).find(e => e.id === 'atStart')).toBeDefined();
+    expect(entriesInRange([atStart], 'j1', RANGE).find((e) => e.id === 'atStart')).toBeDefined();
   });
 
   it('excludes an entry whose start is exactly at range.end (half-open [start,end))', () => {
     const atEnd = entry({
-      id: 'atEnd', jobId: 'j1',
+      id: 'atEnd',
+      jobId: 'j1',
       start: new Date(END_MS).toISOString(),
       end: new Date(END_MS + 3_600_000).toISOString(),
     });
@@ -163,7 +172,8 @@ describe('entriesInRange', () => {
 
   it('excludes an entry whose start is before range.start', () => {
     const before = entry({
-      id: 'before', jobId: 'j1',
+      id: 'before',
+      jobId: 'j1',
       start: new Date(2024, 0, 9, 9, 0, 0).toISOString(),
       end: new Date(2024, 0, 9, 11, 0, 0).toISOString(),
     });
@@ -172,18 +182,22 @@ describe('entriesInRange', () => {
 
   it('includes the Live Session when its start falls within range', () => {
     const result = entriesInRange([live], 'j1', RANGE);
-    expect(result.find(e => e.id === 'live')).toBeDefined();
+    expect(result.find((e) => e.id === 'live')).toBeDefined();
   });
 
   it('excludes the Live Session when its start is outside range', () => {
-    const liveOutside = entry({ id: 'liveOut', jobId: 'j1', start: new Date(2024, 0, 9, 9, 0, 0).toISOString() });
+    const liveOutside = entry({
+      id: 'liveOut',
+      jobId: 'j1',
+      start: new Date(2024, 0, 9, 9, 0, 0).toISOString(),
+    });
     expect(entriesInRange([liveOutside], 'j1', RANGE)).toHaveLength(0);
   });
 
   it('returns all matching entries for an unbounded range {start:null, end:null}', () => {
     const allTime = { start: null, end: null };
     const result = entriesInRange([e1, e2, e3, live], 'j1', allTime);
-    expect(result.map(e => e.id).sort()).toEqual(['e1', 'e2', 'live'].sort());
+    expect(result.map((e) => e.id).sort()).toEqual(['e1', 'e2', 'live'].sort());
   });
 });
 
@@ -196,7 +210,8 @@ describe('computeTotals', () => {
 
   it('computes hours as sum(ms) / 3.6e6', () => {
     const e = entry({
-      id: 'e1', jobId: 'j1',
+      id: 'e1',
+      jobId: 'j1',
       start: '2024-01-10T09:00:00.000Z',
       end: '2024-01-10T11:00:00.000Z', // 7_200_000 ms = 2h
       rate: 20,
@@ -206,7 +221,8 @@ describe('computeTotals', () => {
 
   it('computes Gross Income as hours × Entry Rate', () => {
     const e = entry({
-      id: 'e1', jobId: 'j1',
+      id: 'e1',
+      jobId: 'j1',
       start: '2024-01-10T09:00:00.000Z',
       end: '2024-01-10T10:30:00.000Z', // 5_400_000 ms = 1.5h
       rate: 20,
@@ -216,13 +232,15 @@ describe('computeTotals', () => {
 
   it('uses per-Entry Rate when entries have different rates', () => {
     const eA = entry({
-      id: 'eA', jobId: 'j1',
+      id: 'eA',
+      jobId: 'j1',
       start: '2024-01-10T09:00:00.000Z',
       end: '2024-01-10T11:00:00.000Z', // 2h
       rate: 10,
     });
     const eB = entry({
-      id: 'eB', jobId: 'j1',
+      id: 'eB',
+      jobId: 'j1',
       start: '2024-01-11T09:00:00.000Z',
       end: '2024-01-11T10:00:00.000Z', // 1h
       rate: 15,
@@ -235,7 +253,8 @@ describe('computeTotals', () => {
   it('excludes the Live Session (end == null) from totals', () => {
     const live = entry({ id: 'live', jobId: 'j1', start: '2024-01-10T09:00:00.000Z' });
     const completed = entry({
-      id: 'e1', jobId: 'j1',
+      id: 'e1',
+      jobId: 'j1',
       start: '2024-01-10T09:00:00.000Z',
       end: '2024-01-10T11:00:00.000Z', // 2h at rate 20
       rate: 20,
@@ -253,7 +272,8 @@ describe('computeTotals', () => {
   it('does not round: preserves fractional hours and income', () => {
     // 1h 10min = 4_200_000ms → hours = 7/6, income = 7/6 × 10 ≈ 11.666...
     const e = entry({
-      id: 'e1', jobId: 'j1',
+      id: 'e1',
+      jobId: 'j1',
       start: '2024-01-10T09:00:00.000Z',
       end: '2024-01-10T10:10:00.000Z', // 4_200_000 ms
       rate: 10,
@@ -293,7 +313,8 @@ describe('defaultReportJobId', () => {
     // Live Session starts earlier, but it still takes precedence over the latest completed entry
     const live = entry({ id: 'live', jobId: 'j2', start: '2024-01-10T08:00:00.000Z' });
     const latestCompleted = entry({
-      id: 'e1', jobId: 'j1',
+      id: 'e1',
+      jobId: 'j1',
       start: '2024-01-11T09:00:00.000Z',
       end: '2024-01-11T11:00:00.000Z',
     });
@@ -302,12 +323,14 @@ describe('defaultReportJobId', () => {
 
   it('returns jobId of the entry with the latest start when no stored and no Live Session', () => {
     const older = entry({
-      id: 'e1', jobId: 'j1',
+      id: 'e1',
+      jobId: 'j1',
       start: '2024-01-09T09:00:00.000Z',
       end: '2024-01-09T11:00:00.000Z',
     });
     const newer = entry({
-      id: 'e2', jobId: 'j2',
+      id: 'e2',
+      jobId: 'j2',
       start: '2024-01-10T09:00:00.000Z',
       end: '2024-01-10T11:00:00.000Z',
     });

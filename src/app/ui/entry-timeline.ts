@@ -46,8 +46,12 @@ function dayHeading(key: string): string {
         <ol class="space-y-6 border-l border-stone-700 pl-5">
           @for (g of groups(); track g.key) {
             <li class="relative">
-              <span class="absolute -left-[1.6rem] top-1.5 h-2 w-2 rounded-full bg-amber-300"></span>
-              <div class="mb-2 text-xs uppercase tracking-widest text-stone-400">{{ g.heading }}</div>
+              <span
+                class="absolute -left-[1.6rem] top-1.5 h-2 w-2 rounded-full bg-amber-300"
+              ></span>
+              <div class="mb-2 text-xs uppercase tracking-widest text-stone-400">
+                {{ g.heading }}
+              </div>
               <div class="flex flex-col gap-2">
                 @for (e of g.entries; track e.id) {
                   <button
@@ -58,7 +62,9 @@ function dayHeading(key: string): string {
                   >
                     <div class="flex items-center justify-between gap-3">
                       <span class="font-mono text-sm text-stone-100">
-                        {{ formatTime(dateMs(e.start)) }}–{{ e.end !== null ? formatTime(dateMs(e.end)) : '' }}
+                        {{ formatTime(dateMs(e.start)) }}–{{
+                          e.end !== null ? formatTime(dateMs(e.end)) : ''
+                        }}
                       </span>
                       <span class="flex items-center gap-2">
                         @if (e.end === null) {
@@ -90,7 +96,7 @@ export class EntryTimelineComponent {
   /** Report entries grouped by their local calendar day, ordered by start time. */
   readonly groups = computed<DayGroup[]>(() => {
     const entries = [...this.ui.reportEntries()].sort(
-      (a, b) => Date.parse(a.start) - Date.parse(b.start)
+      (a, b) => Date.parse(a.start) - Date.parse(b.start),
     );
 
     const byDay = new Map<string, Entry[]>();

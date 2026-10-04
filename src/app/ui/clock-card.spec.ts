@@ -6,7 +6,11 @@ import { TimesheetStore } from '../state/timesheet-store';
 import { UiState } from '../state/ui-state';
 import { LONG_SESSION_MS } from '../domain/models';
 
-function setup(): { fixture: ComponentFixture<ClockCardComponent>; store: TimesheetStore; ui: UiState } {
+function setup(): {
+  fixture: ComponentFixture<ClockCardComponent>;
+  store: TimesheetStore;
+  ui: UiState;
+} {
   TestBed.configureTestingModule({
     imports: [ClockCardComponent],
     providers: [provideZonelessChangeDetection()],
@@ -20,7 +24,7 @@ function setup(): { fixture: ComponentFixture<ClockCardComponent>; store: Timesh
 
 function btn(el: HTMLElement, text: string): HTMLButtonElement | null {
   return (
-    (Array.from(el.querySelectorAll('button')).find(b =>
+    (Array.from(el.querySelectorAll('button')).find((b) =>
       b.textContent?.trim().includes(text),
     ) as HTMLButtonElement) ?? null
   );
@@ -47,7 +51,7 @@ describe('ClockCardComponent', () => {
     it('renders no Clock In buttons', () => {
       const { fixture } = setup();
       const el = fixture.nativeElement as HTMLElement;
-      const clockInBtns = Array.from(el.querySelectorAll('button')).filter(b =>
+      const clockInBtns = Array.from(el.querySelectorAll('button')).filter((b) =>
         b.textContent?.includes('Clock In'),
       );
       expect(clockInBtns).toHaveLength(0);
@@ -124,7 +128,9 @@ describe('ClockCardComponent', () => {
       const job = store.addJob('Acme', 25);
       store.clockIn(job.id);
       fixture.detectChanges();
-      expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="elapsed"]')).not.toBeNull();
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('[data-testid="elapsed"]'),
+      ).not.toBeNull();
     });
 
     it('shows Clock Out button', () => {
@@ -156,11 +162,11 @@ describe('ClockCardComponent', () => {
       store.clockIn(job1.id);
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
-      const switchBtns = Array.from(el.querySelectorAll('button')).filter(b =>
+      const switchBtns = Array.from(el.querySelectorAll('button')).filter((b) =>
         b.textContent?.includes('Switch to'),
       ) as HTMLButtonElement[];
       expect(switchBtns.length).toBeGreaterThan(0);
-      switchBtns.forEach(b => expect(b.disabled).toBe(true));
+      switchBtns.forEach((b) => expect(b.disabled).toBe(true));
     });
 
     it('switch buttons list each non-running active Job', () => {
@@ -182,7 +188,9 @@ describe('ClockCardComponent', () => {
       store.setArchived(archived.id, true);
       store.clockIn(job1.id);
       fixture.detectChanges();
-      expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Switch to Old Client');
+      expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
+        'Switch to Old Client',
+      );
     });
 
     it('shows no Clock In buttons while a Live Session runs', () => {
@@ -192,7 +200,7 @@ describe('ClockCardComponent', () => {
       store.clockIn(job.id);
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
-      const clockInBtns = Array.from(el.querySelectorAll('button')).filter(b =>
+      const clockInBtns = Array.from(el.querySelectorAll('button')).filter((b) =>
         b.textContent?.includes('Clock In'),
       );
       expect(clockInBtns).toHaveLength(0);
@@ -212,7 +220,9 @@ describe('ClockCardComponent', () => {
       store.clockIn(job.id, now - LONG_SESSION_MS);
       vi.advanceTimersByTime(1000);
       fixture.detectChanges();
-      expect((fixture.nativeElement as HTMLElement).textContent?.toLowerCase()).toContain('still clocked in');
+      expect((fixture.nativeElement as HTMLElement).textContent?.toLowerCase()).toContain(
+        'still clocked in',
+      );
     });
 
     it('does not show banner when elapsed < LONG_SESSION_MS', () => {
@@ -225,7 +235,9 @@ describe('ClockCardComponent', () => {
       store.clockIn(job.id, now - LONG_SESSION_MS + 2000);
       vi.advanceTimersByTime(1000);
       fixture.detectChanges();
-      expect((fixture.nativeElement as HTMLElement).textContent?.toLowerCase()).not.toContain('still clocked in');
+      expect((fixture.nativeElement as HTMLElement).textContent?.toLowerCase()).not.toContain(
+        'still clocked in',
+      );
     });
 
     it('banner does not disable Clock Out', () => {

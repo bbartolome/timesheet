@@ -113,16 +113,10 @@ interface JobFormValues {
         }
       </div>
 
-      <form
-        class="mt-6 flex flex-col gap-3"
-        (submit)="$event.preventDefault(); onAdd($event)"
-      >
+      <form class="mt-6 flex flex-col gap-3" (submit)="$event.preventDefault(); onAdd($event)">
         <label class="flex flex-col gap-1 text-sm text-stone-400">
           <span>Name</span>
-          <input
-            type="text"
-            class="rounded bg-stone-700 px-3 py-2 text-stone-100"
-          />
+          <input type="text" class="rounded bg-stone-700 px-3 py-2 text-stone-100" />
         </label>
 
         <label class="flex flex-col gap-1 text-sm text-stone-400">
@@ -137,10 +131,7 @@ interface JobFormValues {
 
         <label class="flex flex-col gap-1 text-sm text-stone-400">
           <span>Pay Period Anchor</span>
-          <input
-            type="datetime-local"
-            class="rounded bg-stone-700 px-3 py-2 text-stone-100"
-          />
+          <input type="datetime-local" class="rounded bg-stone-700 px-3 py-2 text-stone-100" />
         </label>
 
         <label class="flex flex-col gap-1 text-sm text-stone-400">
@@ -357,8 +348,7 @@ export class SettingsDrawerComponent {
   // ── form plumbing ────────────────────────────────────────
   private readJobForm(form: HTMLFormElement): JobFormValues {
     const valueOf = (selector: string): string =>
-      (form.querySelector(selector) as HTMLInputElement | HTMLSelectElement | null)
-        ?.value ?? '';
+      (form.querySelector(selector) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
     return {
       name: valueOf('input[type="text"]'),
       rate: valueOf('input[type="number"]'),

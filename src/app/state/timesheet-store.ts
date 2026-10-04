@@ -11,10 +11,10 @@ export class TimesheetStore {
   readonly data = this._data.asReadonly();
   readonly jobs = computed(() => this._data().jobs);
   readonly entries = computed(() => this._data().entries);
-  readonly activeJobs = computed(() => this._data().jobs.filter(j => !j.archived));
-  readonly archivedJobs = computed(() => this._data().jobs.filter(j => j.archived));
-  readonly liveSession = computed<Entry | null>(() =>
-    this._data().entries.find(e => e.end === null) ?? null
+  readonly activeJobs = computed(() => this._data().jobs.filter((j) => !j.archived));
+  readonly archivedJobs = computed(() => this._data().jobs.filter((j) => j.archived));
+  readonly liveSession = computed<Entry | null>(
+    () => this._data().entries.find((e) => e.end === null) ?? null,
   );
 
   private static loadInitial(): TimesheetData {
@@ -33,13 +33,13 @@ export class TimesheetStore {
   }
 
   private jobById(id: string): Job {
-    const job = this._data().jobs.find(j => j.id === id);
+    const job = this._data().jobs.find((j) => j.id === id);
     if (!job) throw new Error(`Unknown job: ${id}`);
     return job;
   }
 
   private entryById(id: string): Entry {
-    const entry = this._data().entries.find(e => e.id === id);
+    const entry = this._data().entries.find((e) => e.id === id);
     if (!entry) throw new Error(`Unknown entry: ${id}`);
     return entry;
   }
@@ -58,7 +58,7 @@ export class TimesheetStore {
 
   updateJob(id: string, patch: Partial<Pick<Job, 'name' | 'defaultRate' | 'payPeriod'>>): void {
     this.jobById(id);
-    const jobs = this._data().jobs.map(j => (j.id === id ? { ...j, ...patch } : j));
+    const jobs = this._data().jobs.map((j) => (j.id === id ? { ...j, ...patch } : j));
     this.commit({ ...this._data(), jobs });
   }
 
@@ -69,7 +69,7 @@ export class TimesheetStore {
         throw new Error('Clock out first');
       }
     }
-    const jobs = this._data().jobs.map(j => (j.id === id ? { ...j, archived } : j));
+    const jobs = this._data().jobs.map((j) => (j.id === id ? { ...j, archived } : j));
     this.commit({ ...this._data(), jobs });
   }
 
@@ -97,7 +97,7 @@ export class TimesheetStore {
     const live = this.liveSession();
     if (live === null) return null;
     const end = new Date(now).toISOString();
-    const entries = this._data().entries.map(e => (e.id === live.id ? { ...e, end } : e));
+    const entries = this._data().entries.map((e) => (e.id === live.id ? { ...e, end } : e));
     const completed: Entry = { ...live, end };
     this.commit({ ...this._data(), entries });
     return completed;
@@ -113,7 +113,9 @@ export class TimesheetStore {
     const job = this.jobById(input.jobId);
     if (input.end === null) {
       if (this.liveSession() !== null) {
-        throw new Error('A Live Session already exists; clock out before adding another open Entry');
+        throw new Error(
+          'A Live Session already exists; clock out before adding another open Entry',
+        );
       }
     } else {
       if (Date.parse(input.end) <= Date.parse(input.start)) {
@@ -132,10 +134,7 @@ export class TimesheetStore {
     return entry;
   }
 
-  updateEntry(
-    id: string,
-    patch: Partial<Pick<Entry, 'jobId' | 'start' | 'end' | 'note'>>
-  ): void {
+  updateEntry(id: string, patch: Partial<Pick<Entry, 'jobId' | 'start' | 'end' | 'note'>>): void {
     const current = this.entryById(id);
     const nextStart = patch.start !== undefined ? patch.start : current.start;
     const nextEnd = patch.end !== undefined ? patch.end : current.end;
@@ -145,15 +144,15 @@ export class TimesheetStore {
     if (patch.jobId !== undefined) {
       this.jobById(patch.jobId);
     }
-    const entries = this._data().entries.map(e =>
-      e.id === id ? { ...e, ...patch, rate: e.rate } : e
+    const entries = this._data().entries.map((e) =>
+      e.id === id ? { ...e, ...patch, rate: e.rate } : e,
     );
     this.commit({ ...this._data(), entries });
   }
 
   deleteEntry(id: string): void {
     this.entryById(id);
-    const entries = this._data().entries.filter(e => e.id !== id);
+    const entries = this._data().entries.filter((e) => e.id !== id);
     this.commit({ ...this._data(), entries });
   }
 

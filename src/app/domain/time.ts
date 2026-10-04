@@ -73,7 +73,7 @@ export function overlaps(a: Entry, b: Entry, now: number = Date.now()): boolean 
  * and ignoring Entries on different Jobs).
  */
 export function findOverlaps(e: Entry, all: Entry[], now: number = Date.now()): Entry[] {
-  return all.filter(other => overlaps(e, other, now));
+  return all.filter((other) => overlaps(e, other, now));
 }
 
 /**

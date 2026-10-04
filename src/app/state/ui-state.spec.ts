@@ -89,7 +89,14 @@ describe('UiState', () => {
           { id: 'j2', name: 'Beta', defaultRate: 30, payPeriod: null, archived: false },
         ],
         entries: [
-          { id: 'live', jobId: 'j2', start: new Date(2024, 0, 10, 9, 0, 0).toISOString(), end: null, rate: 30, note: '' },
+          {
+            id: 'live',
+            jobId: 'j2',
+            start: new Date(2024, 0, 10, 9, 0, 0).toISOString(),
+            end: null,
+            rate: 30,
+            note: '',
+          },
         ],
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -106,8 +113,22 @@ describe('UiState', () => {
           { id: 'j2', name: 'Beta', defaultRate: 30, payPeriod: null, archived: false },
         ],
         entries: [
-          { id: 'e1', jobId: 'j1', start: '2024-01-09T09:00:00.000Z', end: '2024-01-09T10:00:00.000Z', rate: 20, note: '' },
-          { id: 'e2', jobId: 'j2', start: '2024-01-10T09:00:00.000Z', end: '2024-01-10T10:00:00.000Z', rate: 30, note: '' },
+          {
+            id: 'e1',
+            jobId: 'j1',
+            start: '2024-01-09T09:00:00.000Z',
+            end: '2024-01-09T10:00:00.000Z',
+            rate: 20,
+            note: '',
+          },
+          {
+            id: 'e2',
+            jobId: 'j2',
+            start: '2024-01-10T09:00:00.000Z',
+            end: '2024-01-10T10:00:00.000Z',
+            rate: 30,
+            note: '',
+          },
         ],
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));

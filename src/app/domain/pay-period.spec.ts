@@ -4,7 +4,10 @@ import type { PayPeriod } from './models';
 describe('periodContaining', () => {
   describe('Weekly', () => {
     // Anchor: Mon Jan 8 2024 09:00 local
-    const pp: PayPeriod = { anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(), frequency: 'Weekly' };
+    const pp: PayPeriod = {
+      anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(),
+      frequency: 'Weekly',
+    };
 
     it('returns the 7-day period containing `at`', () => {
       const at = new Date(2024, 0, 10, 12, 0, 0).getTime(); // Wed Jan 10
@@ -28,7 +31,10 @@ describe('periodContaining', () => {
     });
 
     it('preserves anchor time of day in period boundaries', () => {
-      const ppLate: PayPeriod = { anchor: new Date(2024, 0, 8, 14, 30, 0).toISOString(), frequency: 'Weekly' };
+      const ppLate: PayPeriod = {
+        anchor: new Date(2024, 0, 8, 14, 30, 0).toISOString(),
+        frequency: 'Weekly',
+      };
       const at = new Date(2024, 0, 10, 12, 0, 0).getTime();
       const range = periodContaining(ppLate, at);
       expect(new Date(range.start!).getHours()).toBe(14);
@@ -46,7 +52,10 @@ describe('periodContaining', () => {
 
   describe('Biweekly', () => {
     // Anchor: Mon Jan 8 2024 09:00 local
-    const pp: PayPeriod = { anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(), frequency: 'Biweekly' };
+    const pp: PayPeriod = {
+      anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(),
+      frequency: 'Biweekly',
+    };
 
     it('returns the 14-day period containing `at`', () => {
       const at = new Date(2024, 0, 15, 12, 0, 0).getTime(); // Jan 15 — within first biweekly period
@@ -72,7 +81,10 @@ describe('periodContaining', () => {
 
   describe('Monthly', () => {
     // Anchor: Jan 15 2024 09:00 local
-    const pp: PayPeriod = { anchor: new Date(2024, 0, 15, 9, 0, 0).toISOString(), frequency: 'Monthly' };
+    const pp: PayPeriod = {
+      anchor: new Date(2024, 0, 15, 9, 0, 0).toISOString(),
+      frequency: 'Monthly',
+    };
 
     it('returns the calendar-month period containing `at`', () => {
       const at = new Date(2024, 0, 20, 12, 0, 0).getTime(); // Jan 20
@@ -92,7 +104,7 @@ describe('periodContaining', () => {
       const at = new Date(2023, 11, 20, 12, 0, 0).getTime(); // Dec 20 2023
       const range = periodContaining(pp, at);
       expect(range.start).toBe(new Date(2023, 11, 15, 9, 0, 0).getTime()); // Dec 15 2023
-      expect(range.end).toBe(new Date(2024, 0, 15, 9, 0, 0).getTime());     // Jan 15 2024
+      expect(range.end).toBe(new Date(2024, 0, 15, 9, 0, 0).getTime()); // Jan 15 2024
     });
 
     it('preserves anchor time of day in monthly boundaries', () => {
@@ -104,27 +116,36 @@ describe('periodContaining', () => {
 
     it('clamps anchor day 31 to Feb 28 in a non-leap year', () => {
       // 2023 is not a leap year
-      const pp31: PayPeriod = { anchor: new Date(2023, 0, 31, 9, 0, 0).toISOString(), frequency: 'Monthly' };
+      const pp31: PayPeriod = {
+        anchor: new Date(2023, 0, 31, 9, 0, 0).toISOString(),
+        frequency: 'Monthly',
+      };
       const at = new Date(2023, 1, 15, 12, 0, 0).getTime(); // Feb 15 2023
       const range = periodContaining(pp31, at);
       expect(range.start).toBe(new Date(2023, 0, 31, 9, 0, 0).getTime()); // Jan 31
-      expect(range.end).toBe(new Date(2023, 1, 28, 9, 0, 0).getTime());   // Feb 28 (clamped)
+      expect(range.end).toBe(new Date(2023, 1, 28, 9, 0, 0).getTime()); // Feb 28 (clamped)
     });
 
     it('clamps anchor day 31 to Feb 29 in a leap year', () => {
       // 2024 is a leap year
-      const pp31: PayPeriod = { anchor: new Date(2024, 0, 31, 9, 0, 0).toISOString(), frequency: 'Monthly' };
+      const pp31: PayPeriod = {
+        anchor: new Date(2024, 0, 31, 9, 0, 0).toISOString(),
+        frequency: 'Monthly',
+      };
       const at = new Date(2024, 1, 15, 12, 0, 0).getTime(); // Feb 15 2024
       const range = periodContaining(pp31, at);
       expect(range.start).toBe(new Date(2024, 0, 31, 9, 0, 0).getTime()); // Jan 31
-      expect(range.end).toBe(new Date(2024, 1, 29, 9, 0, 0).getTime());   // Feb 29 (clamped)
+      expect(range.end).toBe(new Date(2024, 1, 29, 9, 0, 0).getTime()); // Feb 29 (clamped)
     });
   });
 });
 
 describe('previousPeriod', () => {
   it('returns the period exactly one week before for Weekly', () => {
-    const pp: PayPeriod = { anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(), frequency: 'Weekly' };
+    const pp: PayPeriod = {
+      anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(),
+      frequency: 'Weekly',
+    };
     const at = new Date(2024, 0, 10, 12, 0, 0).getTime(); // in [Jan 8, Jan 15)
     const prev = previousPeriod(pp, at);
     expect(prev.start).toBe(new Date(2024, 0, 1, 9, 0, 0).getTime());
@@ -132,7 +153,10 @@ describe('previousPeriod', () => {
   });
 
   it('returns the period exactly 14 days before for Biweekly', () => {
-    const pp: PayPeriod = { anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(), frequency: 'Biweekly' };
+    const pp: PayPeriod = {
+      anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(),
+      frequency: 'Biweekly',
+    };
     const at = new Date(2024, 0, 15, 12, 0, 0).getTime(); // in [Jan 8, Jan 22)
     const prev = previousPeriod(pp, at);
     expect(prev.start).toBe(new Date(2023, 11, 25, 9, 0, 0).getTime()); // Dec 25 2023
@@ -140,16 +164,22 @@ describe('previousPeriod', () => {
   });
 
   it('returns the period one calendar month before for Monthly', () => {
-    const pp: PayPeriod = { anchor: new Date(2024, 0, 15, 9, 0, 0).toISOString(), frequency: 'Monthly' };
+    const pp: PayPeriod = {
+      anchor: new Date(2024, 0, 15, 9, 0, 0).toISOString(),
+      frequency: 'Monthly',
+    };
     const at = new Date(2024, 1, 20, 12, 0, 0).getTime(); // in [Feb 15, Mar 15)
     const prev = previousPeriod(pp, at);
     expect(prev.start).toBe(new Date(2024, 0, 15, 9, 0, 0).getTime()); // Jan 15
-    expect(prev.end).toBe(new Date(2024, 1, 15, 9, 0, 0).getTime());   // Feb 15
+    expect(prev.end).toBe(new Date(2024, 1, 15, 9, 0, 0).getTime()); // Feb 15
   });
 
   it('shifts by one cycle when `at` is exactly on a boundary', () => {
     // at = Jan 15 09:00 → periodContaining = [Jan 15, Jan 22); previousPeriod = [Jan 8, Jan 15)
-    const pp: PayPeriod = { anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(), frequency: 'Weekly' };
+    const pp: PayPeriod = {
+      anchor: new Date(2024, 0, 8, 9, 0, 0).toISOString(),
+      frequency: 'Weekly',
+    };
     const at = new Date(2024, 0, 15, 9, 0, 0).getTime(); // exactly on boundary
     const prev = previousPeriod(pp, at);
     expect(prev.start).toBe(new Date(2024, 0, 8, 9, 0, 0).getTime());
@@ -158,10 +188,13 @@ describe('previousPeriod', () => {
 
   it('applies day clamping in the previous monthly period for day-31 anchor', () => {
     // at = Mar 15 2023 → periodContaining = [Feb 28, Mar 31); previousPeriod = [Jan 31, Feb 28)
-    const pp31: PayPeriod = { anchor: new Date(2023, 0, 31, 9, 0, 0).toISOString(), frequency: 'Monthly' };
+    const pp31: PayPeriod = {
+      anchor: new Date(2023, 0, 31, 9, 0, 0).toISOString(),
+      frequency: 'Monthly',
+    };
     const at = new Date(2023, 2, 15, 12, 0, 0).getTime(); // Mar 15 2023
     const prev = previousPeriod(pp31, at);
     expect(prev.start).toBe(new Date(2023, 0, 31, 9, 0, 0).getTime()); // Jan 31
-    expect(prev.end).toBe(new Date(2023, 1, 28, 9, 0, 0).getTime());   // Feb 28 (clamped)
+    expect(prev.end).toBe(new Date(2023, 1, 28, 9, 0, 0).getTime()); // Feb 28 (clamped)
   });
 });

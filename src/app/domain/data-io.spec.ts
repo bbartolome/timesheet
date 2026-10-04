@@ -3,7 +3,14 @@ import type { TimesheetData, Job, Entry } from './models';
 import { SCHEMA_VERSION } from './models';
 
 function job(overrides: Partial<Job> = {}): Job {
-  return { id: 'j1', name: 'Acme Corp', defaultRate: 25, payPeriod: null, archived: false, ...overrides };
+  return {
+    id: 'j1',
+    name: 'Acme Corp',
+    defaultRate: 25,
+    payPeriod: null,
+    archived: false,
+    ...overrides,
+  };
 }
 
 function entry(overrides: Partial<Entry> & Pick<Entry, 'id' | 'start'>): Entry {
@@ -120,7 +127,9 @@ describe('parseData rejection cases', () => {
     });
 
     it('throws when schemaVersion is greater than SCHEMA_VERSION', () => {
-      expect(() => parseData(JSON.stringify({ ...validData(), schemaVersion: SCHEMA_VERSION + 1 }))).toThrow();
+      expect(() =>
+        parseData(JSON.stringify({ ...validData(), schemaVersion: SCHEMA_VERSION + 1 })),
+      ).toThrow();
     });
 
     it('accepts schemaVersion equal to SCHEMA_VERSION', () => {
@@ -147,25 +156,29 @@ describe('parseData rejection cases', () => {
 
     it('throws when a job id is not a string', () => {
       expect(() =>
-        parseData(JSON.stringify({ ...validData(), jobs: [{ ...job(), id: 1 }], entries: [] }))
+        parseData(JSON.stringify({ ...validData(), jobs: [{ ...job(), id: 1 }], entries: [] })),
       ).toThrow();
     });
 
     it('throws when a job name is not a string', () => {
       expect(() =>
-        parseData(JSON.stringify({ ...validData(), jobs: [{ ...job(), name: 42 }], entries: [] }))
+        parseData(JSON.stringify({ ...validData(), jobs: [{ ...job(), name: 42 }], entries: [] })),
       ).toThrow();
     });
 
     it('throws when a job defaultRate is not a number', () => {
       expect(() =>
-        parseData(JSON.stringify({ ...validData(), jobs: [{ ...job(), defaultRate: '25' }], entries: [] }))
+        parseData(
+          JSON.stringify({ ...validData(), jobs: [{ ...job(), defaultRate: '25' }], entries: [] }),
+        ),
       ).toThrow();
     });
 
     it('throws when a job archived is not a boolean', () => {
       expect(() =>
-        parseData(JSON.stringify({ ...validData(), jobs: [{ ...job(), archived: 'false' }], entries: [] }))
+        parseData(
+          JSON.stringify({ ...validData(), jobs: [{ ...job(), archived: 'false' }], entries: [] }),
+        ),
       ).toThrow();
     });
   });
@@ -187,8 +200,8 @@ describe('parseData rejection cases', () => {
           JSON.stringify({
             ...validData(),
             entries: [{ ...entry({ id: 'e1', start: '2024-01-15T09:00:00.000Z' }), id: 99 }],
-          })
-        )
+          }),
+        ),
       ).toThrow();
     });
 
@@ -198,8 +211,8 @@ describe('parseData rejection cases', () => {
           JSON.stringify({
             ...validData(),
             entries: [{ ...entry({ id: 'e1', start: '2024-01-15T09:00:00.000Z' }), jobId: 42 }],
-          })
-        )
+          }),
+        ),
       ).toThrow();
     });
 
@@ -209,8 +222,8 @@ describe('parseData rejection cases', () => {
           JSON.stringify({
             ...validData(),
             entries: [{ ...entry({ id: 'e1', start: '2024-01-15T09:00:00.000Z' }), start: 0 }],
-          })
-        )
+          }),
+        ),
       ).toThrow();
     });
 
@@ -220,8 +233,8 @@ describe('parseData rejection cases', () => {
           JSON.stringify({
             ...validData(),
             entries: [{ ...entry({ id: 'e1', start: '2024-01-15T09:00:00.000Z' }), rate: '25' }],
-          })
-        )
+          }),
+        ),
       ).toThrow();
     });
 
@@ -231,8 +244,8 @@ describe('parseData rejection cases', () => {
           JSON.stringify({
             ...validData(),
             entries: [{ ...entry({ id: 'e1', start: '2024-01-15T09:00:00.000Z' }), note: null }],
-          })
-        )
+          }),
+        ),
       ).toThrow();
     });
   });

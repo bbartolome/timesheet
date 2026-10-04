@@ -51,8 +51,8 @@ function parseLocalDate(s: string): number {
  */
 export function entriesInRange(entries: Entry[], jobId: string, range: DateRange): Entry[] {
   return entries
-    .filter(e => e.jobId === jobId)
-    .filter(e => {
+    .filter((e) => e.jobId === jobId)
+    .filter((e) => {
       const s = Date.parse(e.start);
       if (range.start !== null && s < range.start) return false;
       if (range.end !== null && s >= range.end) return false;
@@ -85,10 +85,14 @@ export function computeTotals(entries: Entry[]): ReportTotals {
  *  4. the first non-archived Job;
  *  5. null.
  */
-export function defaultReportJobId(jobs: Job[], entries: Entry[], stored: string | null): string | null {
-  if (stored !== null && jobs.some(j => j.id === stored)) return stored;
+export function defaultReportJobId(
+  jobs: Job[],
+  entries: Entry[],
+  stored: string | null,
+): string | null {
+  if (stored !== null && jobs.some((j) => j.id === stored)) return stored;
 
-  const live = entries.find(e => e.end === null);
+  const live = entries.find((e) => e.end === null);
   if (live !== undefined) return live.jobId;
 
   if (entries.length > 0) {
@@ -99,6 +103,6 @@ export function defaultReportJobId(jobs: Job[], entries: Entry[], stored: string
     return latest.jobId;
   }
 
-  const first = jobs.find(j => !j.archived);
+  const first = jobs.find((j) => !j.archived);
   return first !== undefined ? first.id : null;
 }

@@ -72,14 +72,14 @@ describe('TimesheetStore', () => {
       const store = freshStore();
       const job = store.addJob('Acme', 25);
       store.setArchived(job.id, true);
-      expect(store.activeJobs().find(j => j.id === job.id)).toBeUndefined();
+      expect(store.activeJobs().find((j) => j.id === job.id)).toBeUndefined();
     });
 
     it('archivedJobs includes archived Jobs', () => {
       const store = freshStore();
       const job = store.addJob('Acme', 25);
       store.setArchived(job.id, true);
-      expect(store.archivedJobs().find(j => j.id === job.id)).toBeDefined();
+      expect(store.archivedJobs().find((j) => j.id === job.id)).toBeDefined();
     });
 
     it('setArchived(id, true) throws "Clock out first" when the Job holds the Live Session', () => {
@@ -172,7 +172,7 @@ describe('TimesheetStore', () => {
         end: '2024-01-15T10:00:00.000Z',
       });
       store.updateJob(job.id, { defaultRate: 80 });
-      const found = store.entries().find(e => e.id === entry.id)!;
+      const found = store.entries().find((e) => e.id === entry.id)!;
       expect(found.rate).toBe(40);
     });
   });
@@ -186,7 +186,7 @@ describe('TimesheetStore', () => {
           jobId: job.id,
           start: '2024-01-15T10:00:00.000Z',
           end: '2024-01-15T09:00:00.000Z',
-        })
+        }),
       ).toThrow();
     });
 
@@ -198,7 +198,7 @@ describe('TimesheetStore', () => {
           jobId: job.id,
           start: '2024-01-15T09:00:00.000Z',
           end: '2024-01-15T09:00:00.000Z',
-        })
+        }),
       ).toThrow();
     });
 
@@ -207,7 +207,7 @@ describe('TimesheetStore', () => {
       const job = store.addJob('Acme', 25);
       store.clockIn(job.id);
       expect(() =>
-        store.addEntry({ jobId: job.id, start: '2024-01-15T09:00:00.000Z', end: null })
+        store.addEntry({ jobId: job.id, start: '2024-01-15T09:00:00.000Z', end: null }),
       ).toThrow();
     });
 
@@ -233,9 +233,7 @@ describe('TimesheetStore', () => {
         start: '2024-01-15T09:00:00.000Z',
         end: '2024-01-15T10:00:00.000Z',
       });
-      expect(() =>
-        store.updateEntry(entry.id, { end: '2024-01-15T08:00:00.000Z' })
-      ).toThrow();
+      expect(() => store.updateEntry(entry.id, { end: '2024-01-15T08:00:00.000Z' })).toThrow();
     });
 
     it('throws when patching end to equal start', () => {
@@ -246,9 +244,7 @@ describe('TimesheetStore', () => {
         start: '2024-01-15T09:00:00.000Z',
         end: '2024-01-15T10:00:00.000Z',
       });
-      expect(() =>
-        store.updateEntry(entry.id, { end: '2024-01-15T09:00:00.000Z' })
-      ).toThrow();
+      expect(() => store.updateEntry(entry.id, { end: '2024-01-15T09:00:00.000Z' })).toThrow();
     });
   });
 
@@ -262,7 +258,7 @@ describe('TimesheetStore', () => {
         end: '2024-01-15T10:00:00.000Z',
       });
       store.updateEntry(entry.id, { note: 'revised note' });
-      const found = store.entries().find(e => e.id === entry.id)!;
+      const found = store.entries().find((e) => e.id === entry.id)!;
       expect(found.rate).toBe(25);
     });
   });
@@ -281,7 +277,9 @@ describe('TimesheetStore', () => {
       store.addJob('Original', 20);
       const replacement: TimesheetData = {
         schemaVersion: SCHEMA_VERSION,
-        jobs: [{ id: 'j99', name: 'Imported Job', defaultRate: 60, payPeriod: null, archived: false }],
+        jobs: [
+          { id: 'j99', name: 'Imported Job', defaultRate: 60, payPeriod: null, archived: false },
+        ],
         entries: [],
       };
       store.importJson(JSON.stringify(replacement));

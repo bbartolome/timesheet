@@ -5,7 +5,11 @@ import { EntryDrawerComponent } from './entry-drawer';
 import { TimesheetStore } from '../state/timesheet-store';
 import { UiState } from '../state/ui-state';
 
-function setup(): { fixture: ComponentFixture<EntryDrawerComponent>; store: TimesheetStore; ui: UiState } {
+function setup(): {
+  fixture: ComponentFixture<EntryDrawerComponent>;
+  store: TimesheetStore;
+  ui: UiState;
+} {
   TestBed.configureTestingModule({
     imports: [EntryDrawerComponent],
     providers: [provideZonelessChangeDetection()],
@@ -23,7 +27,7 @@ function root(fixture: ComponentFixture<EntryDrawerComponent>): HTMLElement {
 
 function btn(el: HTMLElement, text: string): HTMLButtonElement | null {
   return (
-    (Array.from(el.querySelectorAll('button')).find(b =>
+    (Array.from(el.querySelectorAll('button')).find((b) =>
       b.textContent?.trim().includes(text),
     ) as HTMLButtonElement) ?? null
   );
@@ -33,9 +37,7 @@ function btn(el: HTMLElement, text: string): HTMLButtonElement | null {
 function field(el: HTMLElement, label: string): HTMLInputElement | HTMLSelectElement | null {
   const byAria = el.querySelector(`[aria-label="${label}"]`);
   if (byAria) return byAria as HTMLInputElement;
-  const lbl = Array.from(el.querySelectorAll('label')).find(
-    l => l.textContent?.trim() === label,
-  );
+  const lbl = Array.from(el.querySelectorAll('label')).find((l) => l.textContent?.trim() === label);
   if (!lbl) return null;
   const forId = lbl.getAttribute('for');
   if (forId) return el.querySelector(`#${forId}`) as HTMLInputElement | null;
@@ -285,7 +287,11 @@ describe('EntryDrawerComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 30);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T11:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T11:00:00.000Z',
+      });
       ui.openNewEntry();
       fixture.detectChanges();
 
@@ -301,7 +307,11 @@ describe('EntryDrawerComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 30);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T11:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T11:00:00.000Z',
+      });
       ui.openNewEntry();
       fixture.detectChanges();
 
@@ -320,7 +330,11 @@ describe('EntryDrawerComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 30);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.openNewEntry();
       fixture.detectChanges();
 

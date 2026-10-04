@@ -5,7 +5,11 @@ import { EntryTimelineComponent } from './entry-timeline';
 import { TimesheetStore } from '../state/timesheet-store';
 import { UiState } from '../state/ui-state';
 
-function setup(): { fixture: ComponentFixture<EntryTimelineComponent>; store: TimesheetStore; ui: UiState } {
+function setup(): {
+  fixture: ComponentFixture<EntryTimelineComponent>;
+  store: TimesheetStore;
+  ui: UiState;
+} {
   TestBed.configureTestingModule({
     imports: [EntryTimelineComponent],
     providers: [provideZonelessChangeDetection()],
@@ -54,7 +58,11 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -70,8 +78,16 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
-      store.addEntry({ jobId: job.id, start: '2024-01-14T09:00:00.000Z', end: '2024-01-14T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-14T09:00:00.000Z',
+        end: '2024-01-14T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -101,7 +117,11 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -116,7 +136,11 @@ describe('EntryTimelineComponent', () => {
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
       // 2-hour entry
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T11:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T11:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -130,9 +154,21 @@ describe('EntryTimelineComponent', () => {
       const { fixture, store, ui } = setup();
       const job1 = store.addJob('Acme', 25);
       const job2 = store.addJob('Beta', 30);
-      store.addEntry({ jobId: job1.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
-      store.addEntry({ jobId: job2.id, start: '2024-01-13T11:00:00.000Z', end: '2024-01-13T12:00:00.000Z' });
-      store.addEntry({ jobId: job2.id, start: '2024-01-14T09:00:00.000Z', end: '2024-01-14T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job1.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job2.id,
+        start: '2024-01-13T11:00:00.000Z',
+        end: '2024-01-13T12:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job2.id,
+        start: '2024-01-14T09:00:00.000Z',
+        end: '2024-01-14T10:00:00.000Z',
+      });
       ui.setReportJob(job1.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -145,9 +181,21 @@ describe('EntryTimelineComponent', () => {
       const { fixture, store, ui } = setup();
       const job1 = store.addJob('Acme', 25);
       const job2 = store.addJob('Beta', 30);
-      store.addEntry({ jobId: job1.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
-      store.addEntry({ jobId: job2.id, start: '2024-01-13T11:00:00.000Z', end: '2024-01-13T12:00:00.000Z' });
-      store.addEntry({ jobId: job2.id, start: '2024-01-14T09:00:00.000Z', end: '2024-01-14T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job1.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job2.id,
+        start: '2024-01-13T11:00:00.000Z',
+        end: '2024-01-13T12:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job2.id,
+        start: '2024-01-14T09:00:00.000Z',
+        end: '2024-01-14T10:00:00.000Z',
+      });
       ui.setReportJob(job1.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -168,8 +216,16 @@ describe('EntryTimelineComponent', () => {
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
       // Two entries on the same local date
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
-      store.addEntry({ jobId: job.id, start: '2024-01-13T11:00:00.000Z', end: '2024-01-13T12:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T11:00:00.000Z',
+        end: '2024-01-13T12:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -181,8 +237,16 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
-      store.addEntry({ jobId: job.id, start: '2024-01-14T09:00:00.000Z', end: '2024-01-14T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-14T09:00:00.000Z',
+        end: '2024-01-14T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -204,7 +268,7 @@ describe('EntryTimelineComponent', () => {
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
       const btns = entryButtons(el(fixture));
-      expect(btns.some(b => b.textContent?.includes('Live'))).toBe(true);
+      expect(btns.some((b) => b.textContent?.includes('Live'))).toBe(true);
     });
 
     it('does not mark a completed entry with "Live"', () => {
@@ -212,12 +276,16 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
       const btns = entryButtons(el(fixture));
-      expect(btns.every(b => !b.textContent?.includes('Live'))).toBe(true);
+      expect(btns.every((b) => !b.textContent?.includes('Live'))).toBe(true);
     });
 
     it('shows exactly one "Live" marker when one Live Session exists', () => {
@@ -225,12 +293,16 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-13T10:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T07:00:00.000Z', end: '2024-01-13T08:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T07:00:00.000Z',
+        end: '2024-01-13T08:00:00.000Z',
+      });
       store.clockIn(job.id);
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
-      const liveBtns = entryButtons(el(fixture)).filter(b => b.textContent?.includes('Live'));
+      const liveBtns = entryButtons(el(fixture)).filter((b) => b.textContent?.includes('Live'));
       expect(liveBtns).toHaveLength(1);
     });
   });
@@ -243,7 +315,11 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -259,7 +335,11 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      const entry = store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      const entry = store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -278,7 +358,7 @@ describe('EntryTimelineComponent', () => {
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
-      const liveBtn = entryButtons(el(fixture)).find(b => b.textContent?.includes('Live'))!;
+      const liveBtn = entryButtons(el(fixture)).find((b) => b.textContent?.includes('Live'))!;
       liveBtn.click();
       fixture.detectChanges();
       const drawer = ui.entryDrawer() as { mode: 'edit'; entryId: string };
@@ -291,8 +371,16 @@ describe('EntryTimelineComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      const entry1 = store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
-      const entry2 = store.addEntry({ jobId: job.id, start: '2024-01-14T09:00:00.000Z', end: '2024-01-14T10:00:00.000Z' });
+      const entry1 = store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      const entry2 = store.addEntry({
+        jobId: job.id,
+        start: '2024-01-14T09:00:00.000Z',
+        end: '2024-01-14T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();

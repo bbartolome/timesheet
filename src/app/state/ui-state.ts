@@ -1,12 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import type { ReportFilter } from '../domain/models';
 import { REPORT_JOB_KEY } from '../domain/models';
-import {
-  computeTotals,
-  defaultReportJobId,
-  entriesInRange,
-  resolveRange,
-} from '../domain/report';
+import { computeTotals, defaultReportJobId, entriesInRange, resolveRange } from '../domain/report';
 import { TimesheetStore } from './timesheet-store';
 
 export type EntryDrawerState = { mode: 'new' } | { mode: 'edit'; entryId: string } | null;
@@ -27,7 +22,7 @@ export class UiState {
     (() => {
       const stored = localStorage.getItem(REPORT_JOB_KEY);
       return stored === null ? null : stored;
-    })()
+    })(),
   );
 
   /**
@@ -40,12 +35,12 @@ export class UiState {
     const jobs = this.store.jobs();
     const entries = this.store.entries();
     const explicit = this._selectedJobId();
-    if (explicit !== null && jobs.some(j => j.id === explicit)) return explicit;
+    if (explicit !== null && jobs.some((j) => j.id === explicit)) return explicit;
     return defaultReportJobId(jobs, entries, this._storedJobId());
   });
 
   readonly reportJob = computed(
-    () => this.store.jobs().find(j => j.id === this.reportJobId()) ?? null
+    () => this.store.jobs().find((j) => j.id === this.reportJobId()) ?? null,
   );
 
   readonly range = computed(() => {

@@ -5,7 +5,11 @@ import { SettingsDrawerComponent } from './settings-drawer';
 import { TimesheetStore } from '../state/timesheet-store';
 import { UiState } from '../state/ui-state';
 
-function setup(): { fixture: ComponentFixture<SettingsDrawerComponent>; store: TimesheetStore; ui: UiState } {
+function setup(): {
+  fixture: ComponentFixture<SettingsDrawerComponent>;
+  store: TimesheetStore;
+  ui: UiState;
+} {
   TestBed.configureTestingModule({
     imports: [SettingsDrawerComponent],
     providers: [provideZonelessChangeDetection()],
@@ -23,7 +27,7 @@ function root(fixture: ComponentFixture<SettingsDrawerComponent>): HTMLElement {
 
 function btn(el: HTMLElement, text: string): HTMLButtonElement | null {
   return (
-    (Array.from(el.querySelectorAll('button')).find(b =>
+    (Array.from(el.querySelectorAll('button')).find((b) =>
       b.textContent?.trim().includes(text),
     ) as HTMLButtonElement) ?? null
   );
@@ -33,9 +37,7 @@ function btn(el: HTMLElement, text: string): HTMLButtonElement | null {
 function field(el: HTMLElement, label: string): HTMLInputElement | HTMLSelectElement | null {
   const byAria = el.querySelector(`[aria-label="${label}"]`);
   if (byAria) return byAria as HTMLInputElement;
-  const lbl = Array.from(el.querySelectorAll('label')).find(
-    l => l.textContent?.trim() === label,
-  );
+  const lbl = Array.from(el.querySelectorAll('label')).find((l) => l.textContent?.trim() === label);
   if (!lbl) return null;
   const forId = lbl.getAttribute('for');
   if (forId) return el.querySelector(`#${forId}`) as HTMLInputElement | null;
@@ -52,7 +54,7 @@ function setField(control: HTMLInputElement | HTMLSelectElement, value: string):
 function inputWithValue(el: HTMLElement, value: string): HTMLInputElement | null {
   return (
     (Array.from(el.querySelectorAll('input')).find(
-      i => (i as HTMLInputElement).value === value,
+      (i) => (i as HTMLInputElement).value === value,
     ) as HTMLInputElement) ?? null
   );
 }
@@ -79,7 +81,9 @@ function selectFile(input: HTMLInputElement, content: string, name = 'backup.jso
 
 const VALID_IMPORT_JSON = JSON.stringify({
   schemaVersion: 1,
-  jobs: [{ id: 'j-imported', name: 'Imported Job', defaultRate: 50, payPeriod: null, archived: false }],
+  jobs: [
+    { id: 'j-imported', name: 'Imported Job', defaultRate: 50, payPeriod: null, archived: false },
+  ],
   entries: [],
 });
 
@@ -111,7 +115,7 @@ describe('SettingsDrawerComponent', () => {
       btn(root(fixture), 'Add Job')!.click();
       fixture.detectChanges();
 
-      expect(store.activeJobs().some(j => j.name === 'Acme' && j.defaultRate === 25)).toBe(true);
+      expect(store.activeJobs().some((j) => j.name === 'Acme' && j.defaultRate === 25)).toBe(true);
     });
 
     it('newly added Job appears as text in the drawer', () => {
@@ -145,7 +149,7 @@ describe('SettingsDrawerComponent', () => {
       btn(root(fixture), 'Add Job')!.click();
       fixture.detectChanges();
 
-      const job = store.activeJobs().find(j => j.name === 'Acme');
+      const job = store.activeJobs().find((j) => j.name === 'Acme');
       expect(job?.payPeriod).not.toBeNull();
       expect(job?.payPeriod?.frequency).toBe('Biweekly');
     });
@@ -167,8 +171,8 @@ describe('SettingsDrawerComponent', () => {
       btn(root(fixture), 'Save')!.click();
       fixture.detectChanges();
 
-      expect(store.jobs().some(j => j.name === 'NewName')).toBe(true);
-      expect(store.jobs().some(j => j.name === 'OldName')).toBe(false);
+      expect(store.jobs().some((j) => j.name === 'NewName')).toBe(true);
+      expect(store.jobs().some((j) => j.name === 'OldName')).toBe(false);
     });
 
     it('changing the Job Default Rate and saving updates the rate in the store', () => {
@@ -256,7 +260,7 @@ describe('SettingsDrawerComponent', () => {
       btn(root(fixture), 'Archive')!.click();
       fixture.detectChanges();
 
-      expect(store.activeJobs().some(j => j.name === 'Acme')).toBe(false);
+      expect(store.activeJobs().some((j) => j.name === 'Acme')).toBe(false);
     });
 
     it('clicking Unarchive restores the Job to active', () => {
@@ -269,7 +273,7 @@ describe('SettingsDrawerComponent', () => {
       btn(root(fixture), 'Unarchive')!.click();
       fixture.detectChanges();
 
-      expect(store.activeJobs().some(j => j.name === 'Acme')).toBe(true);
+      expect(store.activeJobs().some((j) => j.name === 'Acme')).toBe(true);
     });
 
     it('unarchived Job is removed from the Archived section', () => {
@@ -282,7 +286,7 @@ describe('SettingsDrawerComponent', () => {
       btn(root(fixture), 'Unarchive')!.click();
       fixture.detectChanges();
 
-      expect(store.archivedJobs().some(j => j.name === 'Acme')).toBe(false);
+      expect(store.archivedJobs().some((j) => j.name === 'Acme')).toBe(false);
     });
   });
 
@@ -317,7 +321,7 @@ describe('SettingsDrawerComponent', () => {
       btn(root(fixture), 'Archive')!.click();
       fixture.detectChanges();
 
-      expect(store.jobs().find(j => j.id === job.id)?.archived).toBe(false);
+      expect(store.jobs().find((j) => j.id === job.id)?.archived).toBe(false);
     });
   });
 
@@ -356,7 +360,9 @@ describe('SettingsDrawerComponent', () => {
       vi.spyOn(window, 'confirm').mockReturnValue(false);
       mockFileReader(VALID_IMPORT_JSON);
 
-      const importInput = root(fixture).querySelector('[aria-label="Import JSON"]') as HTMLInputElement;
+      const importInput = root(fixture).querySelector(
+        '[aria-label="Import JSON"]',
+      ) as HTMLInputElement;
       selectFile(importInput, VALID_IMPORT_JSON);
       fixture.detectChanges();
 
@@ -372,11 +378,13 @@ describe('SettingsDrawerComponent', () => {
       vi.spyOn(window, 'confirm').mockReturnValue(false);
       mockFileReader(VALID_IMPORT_JSON);
 
-      const importInput = root(fixture).querySelector('[aria-label="Import JSON"]') as HTMLInputElement;
+      const importInput = root(fixture).querySelector(
+        '[aria-label="Import JSON"]',
+      ) as HTMLInputElement;
       selectFile(importInput, VALID_IMPORT_JSON);
       fixture.detectChanges();
 
-      expect(store.jobs().some(j => j.name === 'OriginalJob')).toBe(true);
+      expect(store.jobs().some((j) => j.name === 'OriginalJob')).toBe(true);
     });
 
     it('calls importJson with the file content when confirm returns true', () => {
@@ -388,7 +396,9 @@ describe('SettingsDrawerComponent', () => {
       vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockFileReader(VALID_IMPORT_JSON);
 
-      const importInput = root(fixture).querySelector('[aria-label="Import JSON"]') as HTMLInputElement;
+      const importInput = root(fixture).querySelector(
+        '[aria-label="Import JSON"]',
+      ) as HTMLInputElement;
       selectFile(importInput, VALID_IMPORT_JSON);
       fixture.detectChanges();
 
@@ -404,12 +414,14 @@ describe('SettingsDrawerComponent', () => {
       vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockFileReader(VALID_IMPORT_JSON);
 
-      const importInput = root(fixture).querySelector('[aria-label="Import JSON"]') as HTMLInputElement;
+      const importInput = root(fixture).querySelector(
+        '[aria-label="Import JSON"]',
+      ) as HTMLInputElement;
       selectFile(importInput, VALID_IMPORT_JSON);
       fixture.detectChanges();
 
-      expect(store.jobs().some(j => j.name === 'Imported Job')).toBe(true);
-      expect(store.jobs().some(j => j.name === 'OriginalJob')).toBe(false);
+      expect(store.jobs().some((j) => j.name === 'Imported Job')).toBe(true);
+      expect(store.jobs().some((j) => j.name === 'OriginalJob')).toBe(false);
     });
 
     it('shows [role="alert"] when the imported JSON is invalid', () => {
@@ -420,7 +432,9 @@ describe('SettingsDrawerComponent', () => {
       vi.spyOn(window, 'confirm').mockReturnValue(true);
       mockFileReader('not valid json at all');
 
-      const importInput = root(fixture).querySelector('[aria-label="Import JSON"]') as HTMLInputElement;
+      const importInput = root(fixture).querySelector(
+        '[aria-label="Import JSON"]',
+      ) as HTMLInputElement;
       selectFile(importInput, 'not valid json at all');
       fixture.detectChanges();
 

@@ -55,7 +55,7 @@ describe('App', () => {
     expect(ui.entryDrawer()).toBeNull();
     const addBtn = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('button'),
-    ).find(b => b.textContent?.trim() === '+ Entry');
+    ).find((b) => b.textContent?.trim() === '+ Entry');
     expect(addBtn).not.toBeUndefined();
     addBtn!.click();
     fixture.detectChanges();

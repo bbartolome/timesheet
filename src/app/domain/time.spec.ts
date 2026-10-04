@@ -1,4 +1,12 @@
-import { durationMs, findOverlaps, formatElapsed, formatHours, formatMoney, newId, overlaps } from './time';
+import {
+  durationMs,
+  findOverlaps,
+  formatElapsed,
+  formatHours,
+  formatMoney,
+  newId,
+  overlaps,
+} from './time';
 import type { Entry } from './models';
 
 function entry(overrides: Pick<Entry, 'id' | 'jobId' | 'start'> & Partial<Entry>): Entry {
@@ -7,7 +15,12 @@ function entry(overrides: Pick<Entry, 'id' | 'jobId' | 'start'> & Partial<Entry>
 
 describe('durationMs', () => {
   it('returns end minus start for a completed Entry', () => {
-    const e = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T10:30:00.000Z' });
+    const e = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T10:30:00.000Z',
+    });
     expect(durationMs(e)).toBe(5_400_000);
   });
 
@@ -18,12 +31,22 @@ describe('durationMs', () => {
   });
 
   it('handles midnight-crossing Entries', () => {
-    const e = entry({ id: '1', jobId: 'j1', start: '2024-01-15T23:00:00.000Z', end: '2024-01-16T02:00:00.000Z' });
+    const e = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T23:00:00.000Z',
+      end: '2024-01-16T02:00:00.000Z',
+    });
     expect(durationMs(e)).toBe(10_800_000);
   });
 
   it('never returns a negative duration when start equals end', () => {
-    const e = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T09:00:00.000Z' });
+    const e = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T09:00:00.000Z',
+    });
     expect(durationMs(e)).toBeGreaterThanOrEqual(0);
   });
 });
@@ -90,45 +113,100 @@ describe('overlaps', () => {
   const NOW = new Date('2024-01-15T15:00:00.000Z').getTime();
 
   it('returns true when same jobId and intervals intersect', () => {
-    const a = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
-    const b = entry({ id: '2', jobId: 'j1', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T12:00:00.000Z' });
+    const a = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
+    const b = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T12:00:00.000Z',
+    });
     expect(overlaps(a, b, NOW)).toBe(true);
   });
 
   it('returns false when same jobId but endpoints only touch (a.end == b.start)', () => {
-    const a = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T10:00:00.000Z' });
-    const b = entry({ id: '2', jobId: 'j1', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
+    const a = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T10:00:00.000Z',
+    });
+    const b = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
     expect(overlaps(a, b, NOW)).toBe(false);
   });
 
   it('returns false for Entries on different Jobs', () => {
-    const a = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
-    const b = entry({ id: '2', jobId: 'j2', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T12:00:00.000Z' });
+    const a = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
+    const b = entry({
+      id: '2',
+      jobId: 'j2',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T12:00:00.000Z',
+    });
     expect(overlaps(a, b, NOW)).toBe(false);
   });
 
   it('returns false for self-comparison (same id)', () => {
-    const a = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
+    const a = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
     expect(overlaps(a, a, NOW)).toBe(false);
   });
 
   it('uses explicit now for a Live Session end (null) and detects overlap', () => {
     const liveNow = new Date('2024-01-15T11:00:00.000Z').getTime();
     const live = entry({ id: '1', jobId: 'j1', start: '2024-01-15T10:00:00.000Z' });
-    const b = entry({ id: '2', jobId: 'j1', start: '2024-01-15T10:30:00.000Z', end: '2024-01-15T12:00:00.000Z' });
+    const b = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-15T10:30:00.000Z',
+      end: '2024-01-15T12:00:00.000Z',
+    });
     expect(overlaps(live, b, liveNow)).toBe(true);
   });
 
-  it('returns false when Live Session starts exactly at another Entry\'s end (touching)', () => {
+  it("returns false when Live Session starts exactly at another Entry's end (touching)", () => {
     const liveNow = new Date('2024-01-15T13:00:00.000Z').getTime();
     const live = entry({ id: '1', jobId: 'j1', start: '2024-01-15T11:00:00.000Z' });
-    const b = entry({ id: '2', jobId: 'j1', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
+    const b = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
     expect(overlaps(live, b, liveNow)).toBe(false);
   });
 
   it('detects overlap in midnight-crossing Entries', () => {
-    const a = entry({ id: '1', jobId: 'j1', start: '2024-01-15T23:00:00.000Z', end: '2024-01-16T02:00:00.000Z' });
-    const b = entry({ id: '2', jobId: 'j1', start: '2024-01-16T01:00:00.000Z', end: '2024-01-16T03:00:00.000Z' });
+    const a = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T23:00:00.000Z',
+      end: '2024-01-16T02:00:00.000Z',
+    });
+    const b = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-16T01:00:00.000Z',
+      end: '2024-01-16T03:00:00.000Z',
+    });
     expect(overlaps(a, b, NOW)).toBe(true);
   });
 });
@@ -137,10 +215,30 @@ describe('findOverlaps', () => {
   const NOW = new Date('2024-01-15T15:00:00.000Z').getTime();
 
   it('returns only Entries of the same Job that strictly overlap the target', () => {
-    const target = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
-    const overlapping = entry({ id: '2', jobId: 'j1', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T12:00:00.000Z' });
-    const touching = entry({ id: '3', jobId: 'j1', start: '2024-01-15T11:00:00.000Z', end: '2024-01-15T13:00:00.000Z' });
-    const diffJob = entry({ id: '4', jobId: 'j2', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T11:30:00.000Z' });
+    const target = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
+    const overlapping = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T12:00:00.000Z',
+    });
+    const touching = entry({
+      id: '3',
+      jobId: 'j1',
+      start: '2024-01-15T11:00:00.000Z',
+      end: '2024-01-15T13:00:00.000Z',
+    });
+    const diffJob = entry({
+      id: '4',
+      jobId: 'j2',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T11:30:00.000Z',
+    });
 
     const result = findOverlaps(target, [target, overlapping, touching, diffJob], NOW);
     expect(result).toHaveLength(1);
@@ -148,20 +246,40 @@ describe('findOverlaps', () => {
   });
 
   it('excludes self from results', () => {
-    const target = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
+    const target = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
     expect(findOverlaps(target, [target], NOW)).toHaveLength(0);
   });
 
   it('returns an empty array when no Entries overlap', () => {
-    const target = entry({ id: '1', jobId: 'j1', start: '2024-01-15T09:00:00.000Z', end: '2024-01-15T10:00:00.000Z' });
-    const after = entry({ id: '2', jobId: 'j1', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T11:00:00.000Z' });
+    const target = entry({
+      id: '1',
+      jobId: 'j1',
+      start: '2024-01-15T09:00:00.000Z',
+      end: '2024-01-15T10:00:00.000Z',
+    });
+    const after = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T11:00:00.000Z',
+    });
     expect(findOverlaps(target, [target, after], NOW)).toHaveLength(0);
   });
 
   it('includes a Live Session when it overlaps the target', () => {
     const liveNow = new Date('2024-01-15T12:00:00.000Z').getTime();
     const live = entry({ id: '1', jobId: 'j1', start: '2024-01-15T11:00:00.000Z' });
-    const completed = entry({ id: '2', jobId: 'j1', start: '2024-01-15T10:00:00.000Z', end: '2024-01-15T11:30:00.000Z' });
+    const completed = entry({
+      id: '2',
+      jobId: 'j1',
+      start: '2024-01-15T10:00:00.000Z',
+      end: '2024-01-15T11:30:00.000Z',
+    });
     const result = findOverlaps(live, [live, completed], liveNow);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('2');

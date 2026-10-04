@@ -35,7 +35,7 @@ export function entriesToCsv(entries: Entry[], job: Job): string {
         entry.rate.toFixed(2),
         grossIncome.toFixed(2),
         quote(entry.note),
-      ].join(',')
+      ].join(','),
     );
   }
   return rows.join('\n');

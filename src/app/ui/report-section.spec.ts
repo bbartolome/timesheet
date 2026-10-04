@@ -6,7 +6,11 @@ import { TimesheetStore } from '../state/timesheet-store';
 import { UiState } from '../state/ui-state';
 import type { ReportFilter } from '../domain/models';
 
-function setup(): { fixture: ComponentFixture<ReportSectionComponent>; store: TimesheetStore; ui: UiState } {
+function setup(): {
+  fixture: ComponentFixture<ReportSectionComponent>;
+  store: TimesheetStore;
+  ui: UiState;
+} {
   TestBed.configureTestingModule({
     imports: [ReportSectionComponent],
     providers: [provideZonelessChangeDetection()],
@@ -24,8 +28,8 @@ function el(fixture: ComponentFixture<ReportSectionComponent>): HTMLElement {
 
 function chip(root: HTMLElement, text: string): HTMLButtonElement | null {
   return (
-    (Array.from(root.querySelectorAll('button')).find(b =>
-      b.textContent?.trim() === text,
+    (Array.from(root.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === text,
     ) as HTMLButtonElement) ?? null
   );
 }
@@ -60,7 +64,7 @@ describe('ReportSectionComponent', () => {
       store.addJob('Beta', 30);
       fixture.detectChanges();
       const select = selectEl(el(fixture), 'Report Job')!;
-      const options = Array.from(select.options).map(o => o.text);
+      const options = Array.from(select.options).map((o) => o.text);
       expect(options).toContain('Alpha');
       expect(options).toContain('Beta');
     });
@@ -72,8 +76,8 @@ describe('ReportSectionComponent', () => {
       store.setArchived(archivedJob.id, true);
       fixture.detectChanges();
       const select = selectEl(el(fixture), 'Report Job')!;
-      const options = Array.from(select.options).map(o => o.text);
-      expect(options.some(t => t.includes('OldClient') && t.includes('(archived)'))).toBe(true);
+      const options = Array.from(select.options).map((o) => o.text);
+      expect(options.some((t) => t.includes('OldClient') && t.includes('(archived)'))).toBe(true);
     });
 
     it('includes archived Jobs in the same select as active Jobs', () => {
@@ -171,7 +175,10 @@ describe('ReportSectionComponent', () => {
 
     it('clicking "Current Pay Period" sets filter to {kind:"currentPayPeriod"}', () => {
       const { fixture, store, ui } = setup();
-      const job = store.addJob('Acme', 25, { anchor: '2024-01-01T00:00:00.000Z', frequency: 'Weekly' });
+      const job = store.addJob('Acme', 25, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Weekly',
+      });
       ui.setReportJob(job.id);
       fixture.detectChanges();
       chip(el(fixture), 'Current Pay Period')!.click();
@@ -181,7 +188,10 @@ describe('ReportSectionComponent', () => {
 
     it('clicking "Past Pay Period" sets filter to {kind:"pastPayPeriod"}', () => {
       const { fixture, store, ui } = setup();
-      const job = store.addJob('Acme', 25, { anchor: '2024-01-01T00:00:00.000Z', frequency: 'Weekly' });
+      const job = store.addJob('Acme', 25, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Weekly',
+      });
       ui.setReportJob(job.id);
       fixture.detectChanges();
       chip(el(fixture), 'Past Pay Period')!.click();
@@ -211,7 +221,10 @@ describe('ReportSectionComponent', () => {
 
     it('"Current Pay Period" chip is enabled when reportJob has a payPeriod', () => {
       const { fixture, store, ui } = setup();
-      const job = store.addJob('Acme', 25, { anchor: '2024-01-01T00:00:00.000Z', frequency: 'Weekly' });
+      const job = store.addJob('Acme', 25, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Weekly',
+      });
       ui.setReportJob(job.id);
       fixture.detectChanges();
       expect(chip(el(fixture), 'Current Pay Period')?.disabled).toBe(false);
@@ -219,7 +232,10 @@ describe('ReportSectionComponent', () => {
 
     it('"Past Pay Period" chip is enabled when reportJob has a payPeriod', () => {
       const { fixture, store, ui } = setup();
-      const job = store.addJob('Acme', 25, { anchor: '2024-01-01T00:00:00.000Z', frequency: 'Weekly' });
+      const job = store.addJob('Acme', 25, {
+        anchor: '2024-01-01T00:00:00.000Z',
+        frequency: 'Weekly',
+      });
       ui.setReportJob(job.id);
       fixture.detectChanges();
       expect(chip(el(fixture), 'Past Pay Period')?.disabled).toBe(false);
@@ -306,7 +322,9 @@ describe('ReportSectionComponent', () => {
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
-      expect(el(fixture).querySelector('[data-testid="total-hours"]')!.textContent).toContain('0.00');
+      expect(el(fixture).querySelector('[data-testid="total-hours"]')!.textContent).toContain(
+        '0.00',
+      );
     });
 
     it('total-hours reflects sum of completed entries in range', () => {
@@ -315,12 +333,22 @@ describe('ReportSectionComponent', () => {
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
       // Two 1-hour entries = 2 hours total
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
-      store.addEntry({ jobId: job.id, start: '2024-01-14T09:00:00.000Z', end: '2024-01-14T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-14T09:00:00.000Z',
+        end: '2024-01-14T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
-      expect(el(fixture).querySelector('[data-testid="total-hours"]')!.textContent).toContain('2.00');
+      expect(el(fixture).querySelector('[data-testid="total-hours"]')!.textContent).toContain(
+        '2.00',
+      );
     });
 
     it('gross-income reflects sum of hours × rate over completed entries', () => {
@@ -329,11 +357,17 @@ describe('ReportSectionComponent', () => {
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
       // 2 hours at $25 = $50.00
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T11:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T11:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
-      expect(el(fixture).querySelector('[data-testid="gross-income"]')!.textContent).toContain('50.00');
+      expect(el(fixture).querySelector('[data-testid="gross-income"]')!.textContent).toContain(
+        '50.00',
+      );
     });
 
     it('Live Session is excluded from totals', () => {
@@ -342,12 +376,18 @@ describe('ReportSectionComponent', () => {
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
       // One completed 1-hour entry = 1 hour; Live Session should not add to total
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       store.clockIn(job.id);
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
-      expect(el(fixture).querySelector('[data-testid="total-hours"]')!.textContent).toContain('1.00');
+      expect(el(fixture).querySelector('[data-testid="total-hours"]')!.textContent).toContain(
+        '1.00',
+      );
     });
 
     it('gross-income is shown as plain decimal with 2 decimal places, no currency symbol', () => {
@@ -356,11 +396,16 @@ describe('ReportSectionComponent', () => {
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 22.5);
       // 2 hours at $22.50 = 45.00
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T11:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T11:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
-      const incomeText = el(fixture).querySelector('[data-testid="gross-income"]')!.textContent ?? '';
+      const incomeText =
+        el(fixture).querySelector('[data-testid="gross-income"]')!.textContent ?? '';
       // no currency symbol
       expect(incomeText).not.toMatch(/[$€£¥]/);
       expect(incomeText).toContain('45.00');
@@ -373,7 +418,7 @@ describe('ReportSectionComponent', () => {
     it('renders an "Export CSV" button', () => {
       const { fixture } = setup();
       expect(
-        Array.from(el(fixture).querySelectorAll('button')).some(b =>
+        Array.from(el(fixture).querySelectorAll('button')).some((b) =>
           b.textContent?.trim().includes('Export CSV'),
         ),
       ).toBe(true);
@@ -384,7 +429,11 @@ describe('ReportSectionComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -397,7 +446,7 @@ describe('ReportSectionComponent', () => {
         configurable: true,
       });
 
-      const exportBtn = Array.from(el(fixture).querySelectorAll('button')).find(b =>
+      const exportBtn = Array.from(el(fixture).querySelectorAll('button')).find((b) =>
         b.textContent?.trim().includes('Export CSV'),
       ) as HTMLButtonElement;
       exportBtn.click();
@@ -413,7 +462,11 @@ describe('ReportSectionComponent', () => {
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
       const job = store.addJob('Acme', 25);
-      store.addEntry({ jobId: job.id, start: '2024-01-13T09:00:00.000Z', end: '2024-01-13T10:00:00.000Z' });
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
@@ -425,7 +478,7 @@ describe('ReportSectionComponent', () => {
         configurable: true,
       });
 
-      const exportBtn = Array.from(el(fixture).querySelectorAll('button')).find(b =>
+      const exportBtn = Array.from(el(fixture).querySelectorAll('button')).find((b) =>
         b.textContent?.trim().includes('Export CSV'),
       ) as HTMLButtonElement;
       exportBtn.click();
@@ -460,13 +513,13 @@ describe('ReportSectionComponent', () => {
         return node;
       });
 
-      const exportBtn = Array.from(el(fixture).querySelectorAll('button')).find(b =>
+      const exportBtn = Array.from(el(fixture).querySelectorAll('button')).find((b) =>
         b.textContent?.trim().includes('Export CSV'),
       ) as HTMLButtonElement;
       exportBtn.click();
       fixture.detectChanges();
 
-      const anchor = anchors.find(a => a.download !== '');
+      const anchor = anchors.find((a) => a.download !== '');
       expect(anchor?.download).toContain('Acme Corp');
       vi.restoreAllMocks();
     });

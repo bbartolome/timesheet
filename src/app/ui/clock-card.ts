@@ -97,6 +97,6 @@ export class ClockCardComponent {
   readonly otherJobs = computed<Job[]>(() => {
     const live = this.live();
     if (live === null) return [];
-    return this.store.activeJobs().filter(j => j.id !== live.jobId);
+    return this.store.activeJobs().filter((j) => j.id !== live.jobId);
   });
 }
