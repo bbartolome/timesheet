@@ -401,4 +401,135 @@ describe('EntryTimelineComponent', () => {
       expect(ids).toContain(entry2.id);
     });
   });
+
+  // ─── timeline-job label ───────────────────────────────────────────────────────
+
+  describe('timeline-job label', () => {
+    it('shows the report Job name in [data-testid="timeline-job"]', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme Corp', 25);
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      const label = el(fixture).querySelector('[data-testid="timeline-job"]') as HTMLElement;
+      expect(label).not.toBeNull();
+      expect(label.textContent).toContain('Acme Corp');
+    });
+
+    it('appends " (archived)" to the Job name when the report Job is archived', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Old Client', 20);
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      store.setArchived(job.id, true);
+      fixture.detectChanges();
+      const label = el(fixture).querySelector('[data-testid="timeline-job"]') as HTMLElement;
+      expect(label).not.toBeNull();
+      expect(label.textContent).toContain('Old Client');
+      expect(label.textContent).toContain('(archived)');
+    });
+
+    it('does not show "(archived)" for an active Job', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Active Co', 30);
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      const label = el(fixture).querySelector('[data-testid="timeline-job"]') as HTMLElement;
+      expect(label).not.toBeNull();
+      expect(label.textContent).not.toContain('(archived)');
+    });
+  });
+
+  // ─── next-day marker ──────────────────────────────────────────────────────────
+
+  describe('next-day marker', () => {
+    it('shows "+1d" in [data-testid="next-day"] when Entry end is on the next local calendar day', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      // 24 h apart — guaranteed different local calendar day in any timezone
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T12:00:00.000Z',
+        end: '2024-01-14T12:00:00.000Z',
+      });
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      const marker = el(fixture).querySelector('[data-testid="next-day"]') as HTMLElement | null;
+      expect(marker).not.toBeNull();
+      expect(marker!.textContent).toContain('+1d');
+    });
+
+    it('does not show [data-testid="next-day"] when Entry start and end are on the same local calendar day', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      // Noon to 1 pm UTC — same local calendar day in any timezone
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T12:00:00.000Z',
+        end: '2024-01-13T13:00:00.000Z',
+      });
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      expect(el(fixture).querySelector('[data-testid="next-day"]')).toBeNull();
+    });
+
+    it('does not show [data-testid="next-day"] for the Live Session (no end)', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-13T10:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      store.clockIn(job.id);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      expect(el(fixture).querySelector('[data-testid="next-day"]')).toBeNull();
+    });
+
+    it('shows "+2d" when Entry end is two local calendar days after start', () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-01-16T12:00:00.000Z'));
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      // 48 h apart — always 2 local days later in any timezone
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T12:00:00.000Z',
+        end: '2024-01-15T12:00:00.000Z',
+      });
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      const marker = el(fixture).querySelector('[data-testid="next-day"]') as HTMLElement | null;
+      expect(marker).not.toBeNull();
+      expect(marker!.textContent).toContain('+2d');
+    });
+  });
 });
