@@ -5,6 +5,8 @@ import { STORAGE_KEY, SCHEMA_VERSION } from '../domain/models';
 import type { TimesheetData } from '../domain/models';
 import { emptyData } from '../domain/data-io';
 
+const CORRUPT_KEY = 'timesheet.data.corrupt';
+
 function freshStore(): TimesheetStore {
   TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
   return TestBed.inject(TimesheetStore);
@@ -32,6 +34,64 @@ describe('TimesheetStore', () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ corrupt: true }));
       const store = freshStore();
       expect(store.data()).toEqual(emptyData());
+    });
+  });
+
+  describe('loadError signal and corrupt backup', () => {
+    it('loadError is null when localStorage has no entry', () => {
+      const store = freshStore();
+      expect(store.loadError()).toBeNull();
+    });
+
+    it('loadError is null when localStorage has valid data', () => {
+      const store1 = freshStore();
+      store1.addJob('Acme', 25);
+      TestBed.resetTestingModule();
+      const store2 = freshStore();
+      expect(store2.loadError()).toBeNull();
+    });
+
+    it('loadError is set to a non-null string when localStorage contains corrupt JSON', () => {
+      localStorage.setItem(STORAGE_KEY, 'not-valid-json');
+      const store = freshStore();
+      expect(store.loadError()).not.toBeNull();
+      expect(typeof store.loadError()).toBe('string');
+    });
+
+    it('loadError is set when localStorage contains a structurally invalid document', () => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ corrupt: true }));
+      const store = freshStore();
+      expect(store.loadError()).not.toBeNull();
+    });
+
+    it('copies corrupt data to timesheet.data.corrupt when that key is empty', () => {
+      localStorage.setItem(STORAGE_KEY, 'not-valid-json');
+      freshStore();
+      expect(localStorage.getItem(CORRUPT_KEY)).toBe('not-valid-json');
+    });
+
+    it('does not overwrite timesheet.data.corrupt when it already contains data', () => {
+      localStorage.setItem(STORAGE_KEY, 'second-corrupt');
+      localStorage.setItem(CORRUPT_KEY, 'first-corrupt');
+      freshStore();
+      expect(localStorage.getItem(CORRUPT_KEY)).toBe('first-corrupt');
+    });
+
+    it('does not overwrite STORAGE_KEY before the first mutation', () => {
+      localStorage.setItem(STORAGE_KEY, 'corrupt-payload');
+      freshStore();
+      expect(localStorage.getItem(STORAGE_KEY)).toBe('corrupt-payload');
+    });
+
+    it('writes valid data to STORAGE_KEY after the first mutation following a corrupt load', () => {
+      localStorage.setItem(STORAGE_KEY, 'corrupt-payload');
+      const store = freshStore();
+      store.addJob('Recovered', 40);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      expect(raw).not.toBeNull();
+      const parsed = JSON.parse(raw!);
+      expect(parsed.jobs).toHaveLength(1);
+      expect(parsed.jobs[0].name).toBe('Recovered');
     });
   });
 
@@ -202,13 +262,58 @@ describe('TimesheetStore', () => {
       ).toThrow();
     });
 
-    it('throws when end is null and a Live Session already exists', () => {
+    it('throws Error("End is required") when end is null', () => {
       const store = freshStore();
       const job = store.addJob('Acme', 25);
-      store.clockIn(job.id);
       expect(() =>
-        store.addEntry({ jobId: job.id, start: '2024-01-15T09:00:00.000Z', end: null }),
-      ).toThrow();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        store.addEntry({ jobId: job.id, start: '2024-01-15T09:00:00.000Z', end: null as any }),
+      ).toThrow('End is required');
+    });
+
+    it('throws Error("End is required") when end is an empty string', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      expect(() =>
+        store.addEntry({ jobId: job.id, start: '2024-01-15T09:00:00.000Z', end: '' }),
+      ).toThrow('End is required');
+    });
+
+    it('addEntry never creates a Live Session — only clockIn does', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-15T09:00:00.000Z',
+        end: '2024-01-15T10:00:00.000Z',
+      });
+      expect(store.liveSession()).toBeNull();
+    });
+
+    it('throws Error("Rate must be a non-negative number") when explicit rate is negative', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      expect(() =>
+        store.addEntry({
+          jobId: job.id,
+          start: '2024-01-15T09:00:00.000Z',
+          end: '2024-01-15T10:00:00.000Z',
+          rate: -1,
+        }),
+      ).toThrow('Rate must be a non-negative number');
+    });
+
+    it('throws Error("Rate must be a non-negative number") when explicit rate is Infinity', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      expect(() =>
+        store.addEntry({
+          jobId: job.id,
+          start: '2024-01-15T09:00:00.000Z',
+          end: '2024-01-15T10:00:00.000Z',
+          rate: Infinity,
+        }),
+      ).toThrow('Rate must be a non-negative number');
     });
 
     it('accepts an explicit rate override', () => {
@@ -246,6 +351,25 @@ describe('TimesheetStore', () => {
       });
       expect(() => store.updateEntry(entry.id, { end: '2024-01-15T09:00:00.000Z' })).toThrow();
     });
+
+    it('throws Error("End is required") when patching end to null on a non-Live-Session entry', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      const entry = store.addEntry({
+        jobId: job.id,
+        start: '2024-01-15T09:00:00.000Z',
+        end: '2024-01-15T10:00:00.000Z',
+      });
+      expect(() => store.updateEntry(entry.id, { end: null })).toThrow('End is required');
+    });
+
+    it('allows patching end to null when the entry is already the Live Session', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      const live = store.clockIn(job.id);
+      expect(() => store.updateEntry(live.id, { end: null })).not.toThrow();
+      expect(store.liveSession()).not.toBeNull();
+    });
   });
 
   describe('rate immutability via updateEntry', () => {
@@ -260,6 +384,44 @@ describe('TimesheetStore', () => {
       store.updateEntry(entry.id, { note: 'revised note' });
       const found = store.entries().find((e) => e.id === entry.id)!;
       expect(found.rate).toBe(25);
+    });
+  });
+
+  describe('rate validation — addJob / updateJob', () => {
+    it('addJob throws Error("Rate must be a non-negative number") for a negative defaultRate', () => {
+      const store = freshStore();
+      expect(() => store.addJob('Acme', -1)).toThrow('Rate must be a non-negative number');
+    });
+
+    it('addJob throws Error("Rate must be a non-negative number") for Infinity', () => {
+      const store = freshStore();
+      expect(() => store.addJob('Acme', Infinity)).toThrow('Rate must be a non-negative number');
+    });
+
+    it('addJob throws Error("Rate must be a non-negative number") for NaN', () => {
+      const store = freshStore();
+      expect(() => store.addJob('Acme', NaN)).toThrow('Rate must be a non-negative number');
+    });
+
+    it('addJob accepts zero as a valid defaultRate', () => {
+      const store = freshStore();
+      expect(() => store.addJob('Pro Bono', 0)).not.toThrow();
+    });
+
+    it('updateJob throws Error("Rate must be a non-negative number") for a negative defaultRate', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      expect(() => store.updateJob(job.id, { defaultRate: -5 })).toThrow(
+        'Rate must be a non-negative number',
+      );
+    });
+
+    it('updateJob throws Error("Rate must be a non-negative number") for a non-finite defaultRate', () => {
+      const store = freshStore();
+      const job = store.addJob('Acme', 25);
+      expect(() => store.updateJob(job.id, { defaultRate: Infinity })).toThrow(
+        'Rate must be a non-negative number',
+      );
     });
   });
 
