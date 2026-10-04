@@ -2,6 +2,7 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { App } from './app';
 import { UiState } from './state/ui-state';
+import { STORAGE_KEY } from './domain/models';
 
 function setup(): { fixture: ComponentFixture<App>; ui: UiState } {
   TestBed.configureTestingModule({
@@ -65,5 +66,13 @@ describe('App', () => {
   it('does not contain a router-outlet', () => {
     const { fixture } = setup();
     expect((fixture.nativeElement as HTMLElement).querySelector('router-outlet')).toBeNull();
+  });
+
+  it('shows a load-error alert when localStorage contains corrupt JSON', () => {
+    localStorage.setItem(STORAGE_KEY, '{not valid json');
+    const { fixture } = setup();
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
+    expect(alert).not.toBeNull();
+    expect(alert?.textContent).toContain('Saved data could not be loaded');
   });
 });
