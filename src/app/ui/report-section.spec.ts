@@ -6,6 +6,30 @@ import { TimesheetStore } from '../state/timesheet-store';
 import { UiState } from '../state/ui-state';
 import type { ReportFilter } from '../domain/models';
 
+function captureExportFilename(
+  fixture: ComponentFixture<ReportSectionComponent>,
+): string | undefined {
+  const anchors: HTMLAnchorElement[] = [];
+  const origCreate = document.createElement.bind(document);
+  vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+    const node = origCreate(tag);
+    if (tag === 'a') anchors.push(node as HTMLAnchorElement);
+    return node;
+  });
+  Object.defineProperty(globalThis, 'URL', {
+    value: { createObjectURL: vi.fn(() => 'blob:mock'), revokeObjectURL: vi.fn() },
+    writable: true,
+    configurable: true,
+  });
+  const exportBtn = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(
+    (b) => b.textContent?.trim().includes('Export CSV'),
+  ) as HTMLButtonElement;
+  exportBtn.click();
+  fixture.detectChanges();
+  vi.restoreAllMocks();
+  return anchors.find((a) => a.download !== '')?.download;
+}
+
 function setup(): {
   fixture: ComponentFixture<ReportSectionComponent>;
   store: TimesheetStore;
@@ -40,7 +64,10 @@ function selectEl(root: HTMLElement, label: string): HTMLSelectElement | null {
 }
 
 describe('ReportSectionComponent', () => {
+  let savedURL: unknown;
+
   beforeEach(() => {
+    savedURL = (globalThis as Record<string, unknown>)['URL'];
     localStorage.clear();
     TestBed.resetTestingModule();
     vi.useRealTimers();
@@ -48,6 +75,7 @@ describe('ReportSectionComponent', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    (globalThis as Record<string, unknown>)['URL'] = savedURL;
   });
 
   // ─── Job selector ─────────────────────────────────────────────────────────────
@@ -471,7 +499,11 @@ describe('ReportSectionComponent', () => {
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
 
-      const createObjectURL = vi.fn((_obj: Blob | MediaSource) => 'blob:mock-url');
+      let capturedBlob: Blob | undefined;
+      const createObjectURL = vi.fn((obj: Blob | MediaSource) => {
+        capturedBlob = obj as Blob;
+        return 'blob:mock-url';
+      });
       Object.defineProperty(globalThis, 'URL', {
         value: { createObjectURL, revokeObjectURL: vi.fn() },
         writable: true,
@@ -484,11 +516,10 @@ describe('ReportSectionComponent', () => {
       exportBtn.click();
       fixture.detectChanges();
 
-      const blob = createObjectURL.mock.calls[0][0] as Blob;
-      expect(blob.type).toBe('text/csv');
+      expect(capturedBlob?.type).toBe('text/csv');
     });
 
-    it('the download filename includes the job name', () => {
+    it('the download filename uses the sanitized job name (lowercase, non-alnum runs as hyphens)', () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
       const { fixture, store, ui } = setup();
@@ -496,32 +527,221 @@ describe('ReportSectionComponent', () => {
       ui.setReportJob(job.id);
       ui.filter.set({ kind: 'allTime' });
       fixture.detectChanges();
+      expect(captureExportFilename(fixture)).toBe('timesheet-acme-corp.csv');
+    });
+  });
 
-      const createObjectURL = vi.fn((_obj: Blob | MediaSource) => 'blob:mock-url');
-      Object.defineProperty(globalThis, 'URL', {
-        value: { createObjectURL, revokeObjectURL: vi.fn() },
-        writable: true,
-        configurable: true,
-      });
+  // ─── chip aria-pressed and active classes ─────────────────────────────────────
 
-      // Spy on anchor creation to capture the filename
-      const anchors: HTMLAnchorElement[] = [];
-      const origCreate = document.createElement.bind(document);
-      vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-        const node = origCreate(tag);
-        if (tag === 'a') anchors.push(node as HTMLAnchorElement);
-        return node;
-      });
+  describe('chip aria-pressed and active classes', () => {
+    it('the default active chip ("This Week") has aria-pressed="true"', () => {
+      const { fixture } = setup();
+      expect(chip(el(fixture), 'This Week')?.getAttribute('aria-pressed')).toBe('true');
+    });
 
-      const exportBtn = Array.from(el(fixture).querySelectorAll('button')).find((b) =>
-        b.textContent?.trim().includes('Export CSV'),
-      ) as HTMLButtonElement;
-      exportBtn.click();
+    it('inactive chips have aria-pressed="false"', () => {
+      const { fixture } = setup();
+      const root = el(fixture);
+      for (const text of ['This Month', 'All Time', 'Custom']) {
+        expect(chip(root, text)?.getAttribute('aria-pressed')).toBe('false');
+      }
+    });
+
+    it('active chip has bg-amber-300 class', () => {
+      const { fixture } = setup();
+      expect(chip(el(fixture), 'This Week')?.classList.contains('bg-amber-300')).toBe(true);
+    });
+
+    it('active chip has text-stone-900 class', () => {
+      const { fixture } = setup();
+      expect(chip(el(fixture), 'This Week')?.classList.contains('text-stone-900')).toBe(true);
+    });
+
+    it('inactive chip has bg-stone-700 class', () => {
+      const { fixture } = setup();
+      expect(chip(el(fixture), 'This Month')?.classList.contains('bg-stone-700')).toBe(true);
+    });
+
+    it('inactive chip has text-stone-400 class', () => {
+      const { fixture } = setup();
+      expect(chip(el(fixture), 'This Month')?.classList.contains('text-stone-400')).toBe(true);
+    });
+
+    it('clicking a chip transfers aria-pressed and amber classes to it', () => {
+      const { fixture } = setup();
+      chip(el(fixture), 'This Month')!.click();
       fixture.detectChanges();
+      const root = el(fixture);
+      expect(chip(root, 'This Month')?.getAttribute('aria-pressed')).toBe('true');
+      expect(chip(root, 'This Month')?.classList.contains('bg-amber-300')).toBe(true);
+      expect(chip(root, 'This Week')?.getAttribute('aria-pressed')).toBe('false');
+      expect(chip(root, 'This Week')?.classList.contains('bg-stone-700')).toBe(true);
+    });
 
-      const anchor = anchors.find((a) => a.download !== '');
-      expect(anchor?.download).toContain('Acme Corp');
-      vi.restoreAllMocks();
+    it('only the active chip has bg-amber-300; all others have bg-stone-700', () => {
+      const { fixture } = setup();
+      chip(el(fixture), 'All Time')!.click();
+      fixture.detectChanges();
+      const root = el(fixture);
+      for (const text of ['This Week', 'This Month', 'Custom']) {
+        expect(chip(root, text)?.classList.contains('bg-stone-700')).toBe(true);
+        expect(chip(root, text)?.classList.contains('bg-amber-300')).toBe(false);
+      }
+      expect(chip(root, 'All Time')?.classList.contains('bg-amber-300')).toBe(true);
+    });
+  });
+
+  // ─── Job select selected option ───────────────────────────────────────────────
+
+  describe('Job select selected option', () => {
+    it('the option for the current reportJobId has its selected property true', () => {
+      const { fixture, store, ui } = setup();
+      const job1 = store.addJob('Alpha', 20);
+      const job2 = store.addJob('Beta', 30);
+      ui.setReportJob(job2.id);
+      fixture.detectChanges();
+      const select = selectEl(el(fixture), 'Report Job')!;
+      const opt = Array.from(select.options).find((o) => o.value === job2.id);
+      expect(opt?.selected).toBe(true);
+    });
+
+    it('options for non-selected jobs have selected property false', () => {
+      const { fixture, store, ui } = setup();
+      const job1 = store.addJob('Alpha', 20);
+      const job2 = store.addJob('Beta', 30);
+      ui.setReportJob(job2.id);
+      fixture.detectChanges();
+      const select = selectEl(el(fixture), 'Report Job')!;
+      const opt = Array.from(select.options).find((o) => o.value === job1.id);
+      expect(opt?.selected).toBe(false);
+    });
+
+    it('selected option updates when setReportJob is called again', () => {
+      const { fixture, store, ui } = setup();
+      const job1 = store.addJob('Alpha', 20);
+      const job2 = store.addJob('Beta', 30);
+      ui.setReportJob(job1.id);
+      fixture.detectChanges();
+      ui.setReportJob(job2.id);
+      fixture.detectChanges();
+      const select = selectEl(el(fixture), 'Report Job')!;
+      expect(Array.from(select.options).find((o) => o.value === job2.id)?.selected).toBe(true);
+      expect(Array.from(select.options).find((o) => o.value === job1.id)?.selected).toBe(false);
+    });
+  });
+
+  // ─── empty or invalid custom range ────────────────────────────────────────────
+
+  describe('empty or invalid custom range', () => {
+    it('shows "Pick a date range" when custom from is empty', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      chip(el(fixture), 'Custom')!.click();
+      fixture.detectChanges();
+      // from defaults to '' after clicking Custom
+      expect(el(fixture).textContent).toContain('Pick a date range');
+    });
+
+    it('shows "Pick a date range" when custom filter has both dates empty', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '', to: '' });
+      fixture.detectChanges();
+      expect(el(fixture).textContent).toContain('Pick a date range');
+    });
+
+    it('shows "Pick a date range" when to is empty', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '2024-01-10', to: '' });
+      fixture.detectChanges();
+      expect(el(fixture).textContent).toContain('Pick a date range');
+    });
+
+    it('shows "Pick a date range" when to is before from', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '2024-01-20', to: '2024-01-10' });
+      fixture.detectChanges();
+      expect(el(fixture).textContent).toContain('Pick a date range');
+    });
+
+    it('shows "0.00" for total-hours when custom range is empty', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      store.addEntry({
+        jobId: job.id,
+        start: '2024-01-13T09:00:00.000Z',
+        end: '2024-01-13T10:00:00.000Z',
+      });
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '', to: '' });
+      fixture.detectChanges();
+      expect(el(fixture).querySelector('[data-testid="total-hours"]')?.textContent).toContain(
+        '0.00',
+      );
+    });
+
+    it('does not show "Pick a date range" when custom range is valid', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'custom', from: '2024-01-01', to: '2024-01-31' });
+      fixture.detectChanges();
+      expect(el(fixture).textContent).not.toContain('Pick a date range');
+    });
+  });
+
+  // ─── sanitized CSV filename ────────────────────────────────────────────────────
+
+  describe('sanitized CSV filename', () => {
+    it('simple lowercase name: "Acme" -> "timesheet-acme.csv"', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      expect(captureExportFilename(fixture)).toBe('timesheet-acme.csv');
+    });
+
+    it('spaces become hyphens: "Acme Corp" -> "timesheet-acme-corp.csv"', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Acme Corp', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      expect(captureExportFilename(fixture)).toBe('timesheet-acme-corp.csv');
+    });
+
+    it('special chars collapsed to single hyphen: "Job & Co." -> "timesheet-job-co.csv"', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Job & Co.', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      expect(captureExportFilename(fixture)).toBe('timesheet-job-co.csv');
+    });
+
+    it('leading/trailing hyphens trimmed: "  My Client  " -> "timesheet-my-client.csv"', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('  My Client  ', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      expect(captureExportFilename(fixture)).toBe('timesheet-my-client.csv');
+    });
+
+    it('digits preserved: "Client 2025" -> "timesheet-client-2025.csv"', () => {
+      const { fixture, store, ui } = setup();
+      const job = store.addJob('Client 2025', 25);
+      ui.setReportJob(job.id);
+      ui.filter.set({ kind: 'allTime' });
+      fixture.detectChanges();
+      expect(captureExportFilename(fixture)).toBe('timesheet-client-2025.csv');
     });
   });
 });
