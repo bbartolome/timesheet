@@ -109,6 +109,15 @@ function fromDatetimeLocal(value: string): string | null {
         }
 
         <div class="mt-2 flex items-center justify-end gap-3">
+          @if (isEdit()) {
+            <button
+              type="button"
+              class="rounded border border-stone-600 px-5 py-2 text-sm text-stone-400 transition-colors hover:border-red-400/60 hover:text-red-400"
+              (click)="delete()"
+            >
+              Delete
+            </button>
+          }
           <button
             type="submit"
             class="rounded bg-amber-300 px-5 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-200"
