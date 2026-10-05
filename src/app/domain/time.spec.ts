@@ -307,11 +307,17 @@ describe('newId', () => {
 
     beforeEach(() => {
       originalRandomUUID = crypto.randomUUID;
-      Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true });
+      Object.defineProperty(globalThis.crypto, 'randomUUID', {
+        value: undefined,
+        configurable: true,
+      });
     });
 
     afterEach(() => {
-      Object.defineProperty(globalThis.crypto, 'randomUUID', { value: originalRandomUUID, configurable: true });
+      Object.defineProperty(globalThis.crypto, 'randomUUID', {
+        value: originalRandomUUID,
+        configurable: true,
+      });
     });
 
     it('still returns a UUID v4', () => {
