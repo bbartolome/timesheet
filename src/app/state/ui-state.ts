@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core';
 import type { ReportFilter } from '../domain/models';
 import { REPORT_JOB_KEY } from '../domain/models';
 import { computeTotals, defaultReportJobId, entriesInRange, resolveRange } from '../domain/report';
@@ -8,6 +8,9 @@ export type EntryDrawerState = { mode: 'new' } | { mode: 'edit'; entryId: string
 
 @Injectable({ providedIn: 'root' })
 export class UiState {
+  private readonly store = inject(TimesheetStore);
+  private readonly destroyRef = inject(DestroyRef);
+
   private readonly _now = signal<number>(Date.now());
   readonly now = this._now.asReadonly();
 
@@ -18,12 +21,7 @@ export class UiState {
   /** The Job id the user explicitly chose with setReportJob; null until then. */
   private readonly _selectedJobId = signal<string | null>(null);
   /** Mirrors localStorage[REPORT_JOB_KEY] so re-defaulting stays reactive. */
-  private readonly _storedJobId = signal<string | null>(
-    (() => {
-      const stored = localStorage.getItem(REPORT_JOB_KEY);
-      return stored === null ? null : stored;
-    })(),
-  );
+  private readonly _storedJobId = signal<string | null>(localStorage.getItem(REPORT_JOB_KEY));
 
   /**
    * The Job the report is showing: the explicit selection when it still
@@ -58,8 +56,21 @@ export class UiState {
 
   readonly totals = computed(() => computeTotals(this.reportEntries()));
 
-  constructor(private readonly store: TimesheetStore) {
-    setInterval(() => this._now.set(Date.now()), 1000);
+  constructor() {
+    const tick = () => this._now.set(Date.now());
+    const interval = setInterval(tick, 1000);
+    this.destroyRef.onDestroy(() => clearInterval(interval));
+
+    // If the current report Job has no Pay Period, a pay-period filter is
+    // meaningless (resolveRange would yield null). Reset it to thisWeek.
+    effect(() => {
+      const job = this.reportJob();
+      const kind = this.filter().kind;
+      if (job === null) return;
+      if (job.payPeriod === null && (kind === 'currentPayPeriod' || kind === 'pastPayPeriod')) {
+        this.filter.set({ kind: 'thisWeek' });
+      }
+    });
   }
 
   setReportJob(id: string): void {
