@@ -6,7 +6,6 @@ import { DrawerComponent } from './drawer';
 
 const FREQUENCIES: PayFrequency[] = ['Weekly', 'Biweekly', 'Monthly'];
 
-/** Format an ISO datetime as a `datetime-local` value (local 'yyyy-MM-ddTHH:mm'). */
 function toDatetimeLocal(iso: string): string {
   const ms = Date.parse(iso);
   const local = new Date(ms - new Date(ms).getTimezoneOffset() * 60_000);
@@ -14,7 +13,6 @@ function toDatetimeLocal(iso: string): string {
   return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}`;
 }
 
-/** Parse a `datetime-local` value (local time, no zone) to an ISO UTC string. Null when empty/invalid. */
 function fromDatetimeLocal(value: string): string | null {
   if (value === '') return null;
   const ms = Date.parse(value);
@@ -60,11 +58,10 @@ interface JobFormValues {
             </label>
 
             <label class="flex flex-col gap-1 text-sm text-stone-400">
-              <span>Rate</span>
+              <span>Job Default Rate</span>
               <input
-                aria-label="Rate"
+                aria-label="Job Default Rate"
                 type="number"
-                min="0"
                 step="0.01"
                 class="rounded bg-stone-700 px-3 py-2 text-stone-100"
                 [value]="job.defaultRate"
@@ -116,14 +113,18 @@ interface JobFormValues {
       <form class="mt-6 flex flex-col gap-3" (submit)="$event.preventDefault(); onAdd($event)">
         <label class="flex flex-col gap-1 text-sm text-stone-400">
           <span>Name</span>
-          <input type="text" class="rounded bg-stone-700 px-3 py-2 text-stone-100" />
+          <input
+            aria-label="Name"
+            type="text"
+            class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+          />
         </label>
 
         <label class="flex flex-col gap-1 text-sm text-stone-400">
-          <span>Rate</span>
+          <span>Job Default Rate</span>
           <input
+            aria-label="Job Default Rate"
             type="number"
-            min="0"
             step="0.01"
             class="rounded bg-stone-700 px-3 py-2 text-stone-100"
           />
@@ -131,7 +132,11 @@ interface JobFormValues {
 
         <label class="flex flex-col gap-1 text-sm text-stone-400">
           <span>Pay Period Anchor</span>
-          <input type="datetime-local" class="rounded bg-stone-700 px-3 py-2 text-stone-100" />
+          <input
+            aria-label="Pay Period Anchor"
+            type="datetime-local"
+            class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+          />
         </label>
 
         <label class="flex flex-col gap-1 text-sm text-stone-400">
@@ -162,18 +167,72 @@ interface JobFormValues {
           </summary>
           <div class="mt-3 flex flex-col gap-3">
             @for (job of store.archivedJobs(); track job.id) {
-              <div
-                class="flex items-center justify-between gap-3 rounded-lg border border-stone-700 bg-stone-700/30 p-4"
+              <form
+                class="flex flex-col gap-3 rounded-lg border border-stone-700 bg-stone-700/30 p-4"
+                (submit)="$event.preventDefault(); onSaveEdit($event, job.id)"
               >
-                <span class="text-sm text-stone-100">{{ job.name }}</span>
-                <button
-                  type="button"
-                  class="rounded border border-stone-600 px-4 py-1.5 text-sm text-stone-400 transition-colors hover:border-amber-300/60 hover:text-amber-300"
-                  (click)="unarchive(job.id)"
-                >
-                  Unarchive
-                </button>
-              </div>
+                <h3 class="text-base font-semibold text-stone-100">{{ job.name }}</h3>
+
+                <label class="flex flex-col gap-1 text-sm text-stone-400">
+                  <span>Name</span>
+                  <input
+                    aria-label="Name"
+                    type="text"
+                    class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+                    [value]="job.name"
+                  />
+                </label>
+
+                <label class="flex flex-col gap-1 text-sm text-stone-400">
+                  <span>Job Default Rate</span>
+                  <input
+                    aria-label="Job Default Rate"
+                    type="number"
+                    step="0.01"
+                    class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+                    [value]="job.defaultRate"
+                  />
+                </label>
+
+                <label class="flex flex-col gap-1 text-sm text-stone-400">
+                  <span>Pay Period Anchor</span>
+                  <input
+                    aria-label="Pay Period Anchor"
+                    type="datetime-local"
+                    class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+                    [value]="anchorOf(job)"
+                  />
+                </label>
+
+                <label class="flex flex-col gap-1 text-sm text-stone-400">
+                  <span>Frequency</span>
+                  <select
+                    aria-label="Frequency"
+                    class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+                    [value]="frequencyOf(job)"
+                  >
+                    @for (f of frequencies; track f) {
+                      <option [value]="f">{{ f }}</option>
+                    }
+                  </select>
+                </label>
+
+                <div class="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    class="rounded bg-amber-300 px-4 py-1.5 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-200"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded border border-stone-600 px-4 py-1.5 text-sm text-stone-400 transition-colors hover:border-amber-300/60 hover:text-amber-300"
+                    (click)="unarchive(job.id)"
+                  >
+                    Unarchive
+                  </button>
+                </div>
+              </form>
             }
           </div>
         </details>
@@ -220,7 +279,6 @@ export class SettingsDrawerComponent {
 
   readonly error = signal<string | null>(null);
 
-  // ── display helpers ──────────────────────────────────────
   anchorOf(job: Job): string {
     return job.payPeriod !== null && job.payPeriod !== undefined
       ? toDatetimeLocal(job.payPeriod.anchor)
@@ -231,7 +289,6 @@ export class SettingsDrawerComponent {
     return job.payPeriod?.frequency ?? 'Weekly';
   }
 
-  // ── actions ──────────────────────────────────────────────
   onAdd(event: Event): void {
     const values = this.readJobForm(event.target as HTMLFormElement);
     if (values.name.trim() === '') {
@@ -294,7 +351,6 @@ export class SettingsDrawerComponent {
     this.ui.closeSettings();
   }
 
-  // ── data (export / import / clear) ───────────────────────
   exportJson(): void {
     const json = this.store.exportJson();
     const blob = new Blob([json], { type: 'application/json' });
@@ -345,7 +401,6 @@ export class SettingsDrawerComponent {
     }
   }
 
-  // ── form plumbing ────────────────────────────────────────
   private readJobForm(form: HTMLFormElement): JobFormValues {
     const valueOf = (selector: string): string =>
       (form.querySelector(selector) as HTMLInputElement | HTMLSelectElement | null)?.value ?? '';
@@ -357,7 +412,6 @@ export class SettingsDrawerComponent {
     };
   }
 
-  /** A Pay Period is only stored when an anchor was provided. */
   private payPeriodFrom(values: JobFormValues): PayPeriod | null {
     const iso = fromDatetimeLocal(values.anchor);
     if (iso === null) return null;
