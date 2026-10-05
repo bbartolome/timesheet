@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { TimesheetStore } from './state/timesheet-store';
 import { UiState } from './state/ui-state';
 import { ClockCardComponent } from './ui/clock-card';
 import { EntryDrawerComponent } from './ui/entry-drawer';
@@ -20,6 +21,20 @@ import { SettingsDrawerComponent } from './ui/settings-drawer';
   ],
   template: `
     <div class="mx-auto max-w-2xl space-y-10 px-6 py-10 pb-28">
+      @if (store.loadError()) {
+        <div
+          role="alert"
+          class="rounded-xl border border-amber-300/40 bg-stone-800 p-4 text-sm text-amber-300"
+        >
+          <p class="font-semibold">Saved data could not be loaded</p>
+          <p class="mt-1 text-stone-400">{{ store.loadError() }}</p>
+          <p class="mt-1 text-stone-400">
+            A copy of the raw data is kept in the localStorage key
+            <code class="font-mono text-amber-300">timesheet.data.corrupt</code>.
+          </p>
+        </div>
+      }
+
       <header class="flex items-center justify-between">
         <h1 class="text-2xl font-semibold text-stone-100">Timesheet</h1>
         <button
@@ -50,6 +65,8 @@ import { SettingsDrawerComponent } from './ui/settings-drawer';
   `,
 })
 export class App {
+  /** The timesheet store; surfaced for the load-error banner. */
+  protected readonly store = inject(TimesheetStore);
   /** UI state for template bindings (settings/entry drawer, etc.). */
   protected readonly ui = inject(UiState);
 }
