@@ -3,6 +3,8 @@ import type { Entry } from '../domain/models';
 import { durationMs, formatHours } from '../domain/time';
 import { UiState } from '../state/ui-state';
 
+const DAY_MS = 86_400_000;
+
 interface DayGroup {
   key: string;
   heading: string;
@@ -19,6 +21,17 @@ function localDayKey(ms: number): string {
 
 function localTime(ms: number): string {
   return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+/** Whole local calendar days between the start's and end's local day; > 0 means the end fell on a later day. */
+function nextDayOffset(startMs: number, endMs: number | null): number {
+  if (endMs === null) return 0;
+  const localStart = (ms: number): number => {
+    const d = new Date(ms);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  };
+  const days = Math.round((localStart(endMs) - localStart(startMs)) / DAY_MS);
+  return days > 0 ? days : 0;
 }
 
 function dayHeading(key: string): string {
@@ -38,7 +51,14 @@ function dayHeading(key: string): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="rounded-xl border border-stone-700 bg-stone-800 p-5">
-      <h2 class="mb-4 text-lg font-semibold text-stone-100">Timeline</h2>
+      <h2 class="mb-4 flex items-baseline gap-2 text-lg font-semibold text-stone-100">
+        <span>Entries</span>
+        @if (jobLabel() !== '') {
+          <span data-testid="timeline-job" class="text-base font-normal text-stone-400">
+            {{ jobLabel() }}
+          </span>
+        }
+      </h2>
 
       @if (groups().length === 0) {
         <p class="text-sm text-stone-400">No entries</p>
@@ -61,10 +81,15 @@ function dayHeading(key: string): string {
                     (click)="onEntryClick(e)"
                   >
                     <div class="flex items-center justify-between gap-3">
-                      <span class="font-mono text-sm text-stone-100">
+                      <span class="flex items-center gap-2 font-mono text-sm text-stone-100">
                         {{ formatTime(dateMs(e.start)) }}–{{
                           e.end !== null ? formatTime(dateMs(e.end)) : ''
                         }}
+                        @if (nextDay(e) > 0) {
+                          <span data-testid="next-day" class="text-amber-300">
+                            +{{ nextDay(e) }}d
+                          </span>
+                        }
                       </span>
                       <span class="flex items-center gap-2">
                         @if (e.end === null) {
@@ -92,6 +117,13 @@ function dayHeading(key: string): string {
 })
 export class EntryTimelineComponent {
   readonly ui = inject(UiState);
+
+  /** The report Job's name, suffixed with " (archived)" when the Job is archived. */
+  readonly jobLabel = computed<string>(() => {
+    const job = this.ui.reportJob();
+    if (job === null) return '';
+    return job.archived ? `${job.name} (archived)` : job.name;
+  });
 
   /** Report entries grouped by their local calendar day, ordered by start time. */
   readonly groups = computed<DayGroup[]>(() => {
@@ -128,5 +160,10 @@ export class EntryTimelineComponent {
 
   hoursOf(entry: Entry): string {
     return formatHours(durationMs(entry, this.ui.now()));
+  }
+
+  /** Whole local calendar days the end falls after the start; 0 if no end / same day. */
+  nextDay(entry: Entry): number {
+    return nextDayOffset(Date.parse(entry.start), entry.end !== null ? Date.parse(entry.end) : null);
   }
 }
