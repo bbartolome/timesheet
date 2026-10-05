@@ -164,6 +164,9 @@ export class EntryTimelineComponent {
 
   /** Whole local calendar days the end falls after the start; 0 if no end / same day. */
   nextDay(entry: Entry): number {
-    return nextDayOffset(Date.parse(entry.start), entry.end !== null ? Date.parse(entry.end) : null);
+    return nextDayOffset(
+      Date.parse(entry.start),
+      entry.end !== null ? Date.parse(entry.end) : null,
+    );
   }
 }

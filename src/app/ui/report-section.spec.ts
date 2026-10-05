@@ -21,9 +21,9 @@ function captureExportFilename(
     writable: true,
     configurable: true,
   });
-  const exportBtn = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(
-    (b) => b.textContent?.trim().includes('Export CSV'),
-  ) as HTMLButtonElement;
+  const exportBtn = Array.from(
+    (fixture.nativeElement as HTMLElement).querySelectorAll('button'),
+  ).find((b) => b.textContent?.trim().includes('Export CSV')) as HTMLButtonElement;
   exportBtn.click();
   fixture.detectChanges();
   vi.restoreAllMocks();

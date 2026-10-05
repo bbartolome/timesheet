@@ -75,15 +75,21 @@ describe('resolveRange', () => {
     });
 
     it('returns null when from is not a valid yyyy-mm-dd', () => {
-      expect(resolveRange({ kind: 'custom', from: 'not-a-date', to: '2024-01-12' }, j, NOW)).toBeNull();
+      expect(
+        resolveRange({ kind: 'custom', from: 'not-a-date', to: '2024-01-12' }, j, NOW),
+      ).toBeNull();
     });
 
     it('returns null when to is not a valid yyyy-mm-dd', () => {
-      expect(resolveRange({ kind: 'custom', from: '2024-01-10', to: '2024/01/12' }, j, NOW)).toBeNull();
+      expect(
+        resolveRange({ kind: 'custom', from: '2024-01-10', to: '2024/01/12' }, j, NOW),
+      ).toBeNull();
     });
 
     it('returns null when to is before from', () => {
-      expect(resolveRange({ kind: 'custom', from: '2024-01-12', to: '2024-01-10' }, j, NOW)).toBeNull();
+      expect(
+        resolveRange({ kind: 'custom', from: '2024-01-12', to: '2024-01-10' }, j, NOW),
+      ).toBeNull();
     });
   });
 
