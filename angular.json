@@ -60,7 +60,9 @@
               "buildTarget": "@bbartolome/timesheet:build:production"
             },
             "development": {
-              "buildTarget": "@bbartolome/timesheet:build:development"
+              "buildTarget": "@bbartolome/timesheet:build:development",
+              "host": "0.0.0.0",
+              "allowedHosts": ["localhost", "devcontainer"]
             }
           },
           "defaultConfiguration": "development"
