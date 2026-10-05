@@ -27,10 +27,10 @@ export function resolveRange(filter: ReportFilter, job: Job, now: number): DateR
     case 'allTime':
       return { start: null, end: null };
     case 'custom': {
-      const start = parseLocalDate(filter.from);
-      const to = new Date(parseLocalDate(filter.to));
-      to.setDate(to.getDate() + 1); // day after `to`, 00:00 local — inclusive end boundary
-      return { start, end: to.getTime() };
+      const from = parseLocalDate(filter.from);
+      const to = parseLocalDate(filter.to);
+      if (Number.isNaN(from) || Number.isNaN(to) || to < from) return null;
+      return { start: from, end: to + 86_400_000 }; // day after `to`, 00:00 local — inclusive end boundary
     }
     case 'currentPayPeriod':
       return job.payPeriod === null ? null : periodContaining(job.payPeriod, now);
@@ -79,8 +79,8 @@ export function computeTotals(entries: Entry[]): ReportTotals {
 
 /**
  * Decide which Job the report defaults to:
- *  1. the stored id, when it matches an existing Job;
- *  2. the job of the Live Session;
+ *  1. the job of the Live Session;
+ *  2. the stored id, when it matches an existing Job;
  *  3. the job of the Entry with the latest start;
  *  4. the first non-archived Job;
  *  5. null.
@@ -90,10 +90,10 @@ export function defaultReportJobId(
   entries: Entry[],
   stored: string | null,
 ): string | null {
-  if (stored !== null && jobs.some((j) => j.id === stored)) return stored;
-
   const live = entries.find((e) => e.end === null);
   if (live !== undefined) return live.jobId;
+
+  if (stored !== null && jobs.some((j) => j.id === stored)) return stored;
 
   if (entries.length > 0) {
     let latest = entries[0];
