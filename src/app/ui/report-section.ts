@@ -8,11 +8,10 @@ import { UiState } from '../state/ui-state';
 interface Chip {
   label: string;
   kind: ReportFilter['kind'];
-  /** Pay-period chips are disabled when the report Job has no Pay Period configured. */
   payPeriodOnly: boolean;
 }
 
-const CHIPS: Chip[] = [
+const CHIPS: readonly Chip[] = [
   { label: 'This Week', kind: 'thisWeek', payPeriodOnly: false },
   { label: 'This Month', kind: 'thisMonth', payPeriodOnly: false },
   { label: 'All Time', kind: 'allTime', payPeriodOnly: false },
@@ -32,11 +31,10 @@ const CHIPS: Chip[] = [
           <select
             aria-label="Report Job"
             class="rounded bg-stone-700 px-3 py-2 text-stone-100"
-            [value]="ui.reportJobId()"
             (change)="onJobChange($event)"
           >
             @for (j of jobOptions(); track j.id) {
-              <option [value]="j.id">{{ label(j) }}</option>
+              <option [value]="j.id" [selected]="j.id === ui.reportJobId()">{{ label(j) }}</option>
             }
           </select>
         </label>
@@ -51,15 +49,15 @@ const CHIPS: Chip[] = [
       </div>
 
       <div class="mb-4 flex flex-wrap gap-2">
-        @for (c of chips(); track c.label) {
+        @for (c of chips; track c.label) {
           <button
             type="button"
-            class="rounded-full px-3 py-1 text-xs transition-colors"
-            class="active:bg-amber-300 active:text-stone-900"
-            class="inactive:bg-stone-700 text-stone-400 hover:bg-stone-600"
-            class="disabled:cursor-not-allowed disabled:opacity-40"
-            [class.active]="filterKind() === c.kind"
-            [class.inactive]="filterKind() !== c.kind"
+            class="rounded-full px-3 py-1 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+            [class.bg-amber-300]="filterKind() === c.kind"
+            [class.text-stone-900]="filterKind() === c.kind"
+            [class.bg-stone-700]="filterKind() !== c.kind"
+            [class.text-stone-400]="filterKind() !== c.kind"
+            [attr.aria-pressed]="filterKind() === c.kind ? 'true' : 'false'"
             [disabled]="c.payPeriodOnly && !hasPayPeriod()"
             (click)="setFilter(c.kind)"
           >
@@ -67,6 +65,10 @@ const CHIPS: Chip[] = [
           </button>
         }
       </div>
+
+      @if (isCustom() && rangeIsNull()) {
+        <p class="mb-4 text-sm text-stone-400">Pick a date range</p>
+      }
 
       @if (isCustom()) {
         <div class="mb-4 flex flex-wrap items-end gap-3 text-sm">
@@ -114,9 +116,8 @@ export class ReportSectionComponent {
   readonly store = inject(TimesheetStore);
   readonly ui = inject(UiState);
 
-  readonly chips = computed<Chip[]>(() => CHIPS);
+  readonly chips = CHIPS;
 
-  /** Options for the Report Job selector: every Job, archived ones labelled "(archived)". */
   readonly jobOptions = computed<Job[]>(() => this.store.jobs());
 
   readonly reportJob = computed<Job | null>(() => this.ui.reportJob());
@@ -130,6 +131,8 @@ export class ReportSectionComponent {
 
   readonly isCustom = computed<boolean>(() => this.filterKind() === 'custom');
 
+  readonly rangeIsNull = computed<boolean>(() => this.ui.range() === null);
+
   readonly customFrom = computed<string>(() => {
     const f = this.ui.filter();
     return f.kind === 'custom' ? f.from : '';
@@ -140,9 +143,15 @@ export class ReportSectionComponent {
     return f.kind === 'custom' ? f.to : '';
   });
 
-  readonly hoursText = computed<string>(() => formatHours(this.ui.totals().hours * 3_600_000));
+  readonly hoursText = computed<string>(() => {
+    if (this.isCustom() && this.rangeIsNull()) return '0.00';
+    return formatHours(this.ui.totals().hours * 3_600_000);
+  });
 
-  readonly incomeText = computed<string>(() => formatMoney(this.ui.totals().grossIncome));
+  readonly incomeText = computed<string>(() => {
+    if (this.isCustom() && this.rangeIsNull()) return '0.00';
+    return formatMoney(this.ui.totals().grossIncome);
+  });
 
   label(j: Job): string {
     return j.archived ? `${j.name} (archived)` : j.name;
@@ -164,7 +173,6 @@ export class ReportSectionComponent {
       this.ui.filter.set({ kind: 'custom', from, to });
       return;
     }
-    // Preserve any previously chosen custom dates when switching back to Custom.
     this.ui.filter.set({ kind } as ReportFilter);
   }
 
@@ -190,10 +198,18 @@ export class ReportSectionComponent {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `timesheet-${job.name}.csv`;
+    anchor.download = `timesheet-${sanitizeJobName(job.name)}.csv`;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
   }
+}
+
+/** Lowercase a Job name, collapse runs of non-alphanumeric chars to a single '-', trim '-'. */
+function sanitizeJobName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
