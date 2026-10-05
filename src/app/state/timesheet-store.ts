@@ -4,11 +4,27 @@ import { STORAGE_KEY } from '../domain/models';
 import { emptyData, parseData, serialize } from '../domain/data-io';
 import { newId } from '../domain/time';
 
+const CORRUPT_KEY = 'timesheet.data.corrupt';
+
+function assertRate(value: number): void {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    throw new Error('Rate must be a non-negative number');
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class TimesheetStore {
-  private readonly _data = signal<TimesheetData>(TimesheetStore.loadInitial());
+  constructor() {
+    const initial = this.loadInitial();
+    this._data.set(initial.data);
+    this._loadError.set(initial.loadError);
+  }
+
+  private readonly _data = signal<TimesheetData>(emptyData());
+  private readonly _loadError = signal<string | null>(null);
 
   readonly data = this._data.asReadonly();
+  readonly loadError = this._loadError.asReadonly();
   readonly jobs = computed(() => this._data().jobs);
   readonly entries = computed(() => this._data().entries);
   readonly activeJobs = computed(() => this._data().jobs.filter((j) => !j.archived));
@@ -17,13 +33,20 @@ export class TimesheetStore {
     () => this._data().entries.find((e) => e.end === null) ?? null,
   );
 
-  private static loadInitial(): TimesheetData {
+  private loadInitial(): { data: TimesheetData; loadError: string | null } {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) {
+      return { data: emptyData(), loadError: null };
+    }
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw === null) return emptyData();
-      return parseData(raw);
-    } catch {
-      return emptyData();
+      return { data: parseData(raw), loadError: null };
+    } catch (err) {
+      const backup = localStorage.getItem(CORRUPT_KEY);
+      if (backup === null || backup === '') {
+        localStorage.setItem(CORRUPT_KEY, raw);
+      }
+      const message = err instanceof Error ? err.message : String(err);
+      return { data: emptyData(), loadError: message };
     }
   }
 
@@ -45,6 +68,7 @@ export class TimesheetStore {
   }
 
   addJob(name: string, defaultRate: number, payPeriod?: PayPeriod | null): Job {
+    assertRate(defaultRate);
     const job: Job = {
       id: newId(),
       name,
@@ -58,6 +82,9 @@ export class TimesheetStore {
 
   updateJob(id: string, patch: Partial<Pick<Job, 'name' | 'defaultRate' | 'payPeriod'>>): void {
     this.jobById(id);
+    if (patch.defaultRate !== undefined) {
+      assertRate(patch.defaultRate);
+    }
     const jobs = this._data().jobs.map((j) => (j.id === id ? { ...j, ...patch } : j));
     this.commit({ ...this._data(), jobs });
   }
@@ -106,28 +133,25 @@ export class TimesheetStore {
   addEntry(input: {
     jobId: string;
     start: string;
-    end: string | null;
+    end: string;
     rate?: number;
     note?: string;
   }): Entry {
-    const job = this.jobById(input.jobId);
-    if (input.end === null) {
-      if (this.liveSession() !== null) {
-        throw new Error(
-          'A Live Session already exists; clock out before adding another open Entry',
-        );
-      }
-    } else {
-      if (Date.parse(input.end) <= Date.parse(input.start)) {
-        throw new Error('Entry end must be after its start');
-      }
+    if (!input.end) {
+      throw new Error('End is required');
     }
+    const job = this.jobById(input.jobId);
+    if (Date.parse(input.end) <= Date.parse(input.start)) {
+      throw new Error('Entry end must be after its start');
+    }
+    const rate = input.rate !== undefined ? input.rate : job.defaultRate;
+    assertRate(rate);
     const entry: Entry = {
       id: newId(),
       jobId: input.jobId,
       start: input.start,
       end: input.end,
-      rate: input.rate !== undefined ? input.rate : job.defaultRate,
+      rate,
       note: input.note !== undefined ? input.note : '',
     };
     this.commit({ ...this._data(), entries: [...this._data().entries, entry] });
@@ -138,6 +162,9 @@ export class TimesheetStore {
     const current = this.entryById(id);
     const nextStart = patch.start !== undefined ? patch.start : current.start;
     const nextEnd = patch.end !== undefined ? patch.end : current.end;
+    if (nextEnd === null && current.end !== null) {
+      throw new Error('End is required');
+    }
     if (nextEnd !== null && Date.parse(nextEnd) <= Date.parse(nextStart)) {
       throw new Error('Entry end must be after its start');
     }
