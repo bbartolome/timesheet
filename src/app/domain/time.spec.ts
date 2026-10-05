@@ -296,4 +296,35 @@ describe('newId', () => {
   it('returns a unique value on each call', () => {
     expect(newId()).not.toBe(newId());
   });
+
+  it('output matches the UUID v4 format', () => {
+    const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+    expect(newId()).toMatch(UUID_V4);
+  });
+
+  describe('when crypto.randomUUID is unavailable', () => {
+    let originalRandomUUID: typeof crypto.randomUUID;
+
+    beforeEach(() => {
+      originalRandomUUID = crypto.randomUUID;
+      Object.defineProperty(globalThis.crypto, 'randomUUID', { value: undefined, configurable: true });
+    });
+
+    afterEach(() => {
+      Object.defineProperty(globalThis.crypto, 'randomUUID', { value: originalRandomUUID, configurable: true });
+    });
+
+    it('still returns a UUID v4', () => {
+      const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+      expect(newId()).toMatch(UUID_V4);
+    });
+
+    it('does not throw', () => {
+      expect(() => newId()).not.toThrow();
+    });
+
+    it('two calls return different values', () => {
+      expect(newId()).not.toBe(newId());
+    });
+  });
 });
