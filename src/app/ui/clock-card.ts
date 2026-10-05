@@ -9,9 +9,9 @@ import { UiState } from '../state/ui-state';
   selector: 'app-clock-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (store.activeJobs().length === 0) {
-      <div class="rounded-xl border border-stone-700 bg-stone-800 p-10 text-center">
-        <p class="mb-5 text-stone-400">You have no active Jobs yet.</p>
+    @if (store.activeJobs().length === 0 && store.jobs().length === 0) {
+      <div class="rounded-2xl bg-stone-800 p-6 text-center">
+        <p class="mb-5 text-stone-400">Track time against a Job. You don't have one yet.</p>
         <button
           type="button"
           class="rounded-full bg-amber-300 px-8 py-3 font-semibold text-stone-900 hover:bg-amber-200"
@@ -20,18 +20,26 @@ import { UiState } from '../state/ui-state';
           Create your first Job
         </button>
       </div>
-    } @else if (live()) {
-      <div class="text-center">
+    } @else if (store.activeJobs().length === 0) {
+      <div class="rounded-2xl bg-stone-800 p-6 text-center">
+        <p class="mb-5 text-stone-400">All Jobs are archived</p>
+        <button
+          type="button"
+          class="rounded-full bg-amber-300 px-8 py-3 font-semibold text-stone-900 hover:bg-amber-200"
+          (click)="ui.openSettings()"
+        >
+          Manage Jobs
+        </button>
+      </div>
+    } @else if (live() !== null) {
+      <div class="rounded-2xl bg-stone-800 p-6 text-center">
         @if (elapsedMs() >= longSessionMs) {
-          <div
-            class="mx-auto mb-5 w-fit rounded-lg bg-amber-300/10 px-4 py-2 text-amber-300"
-            role="status"
-          >
+          <div class="mx-auto mb-5 w-fit rounded-lg bg-amber-300/10 px-4 py-2 text-amber-300" role="status">
             Still clocked in?
           </div>
         }
         <div class="text-sm uppercase tracking-widest text-stone-400">Now working</div>
-        <div data-testid="elapsed" class="mt-2 font-mono text-7xl font-light text-amber-300">
+        <div data-testid="elapsed" class="mt-2 font-mono text-5xl font-light tabular-nums sm:text-7xl text-amber-300">
           {{ elapsedText() }}
         </div>
         <div class="mt-2 text-xl">{{ liveJobName() }}</div>
@@ -57,7 +65,7 @@ import { UiState } from '../state/ui-state';
         }
       </div>
     } @else {
-      <div class="text-center">
+      <div class="rounded-2xl bg-stone-800 p-6 text-center">
         <div class="text-sm uppercase tracking-widest text-stone-400">Ready to work</div>
         <div class="mt-5 flex flex-wrap justify-center gap-3">
           @for (j of store.activeJobs(); track j.id) {
