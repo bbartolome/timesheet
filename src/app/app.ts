@@ -47,9 +47,9 @@ import { SettingsDrawerComponent } from './ui/settings-drawer';
         </button>
       </header>
 
-      <app-clock-card />
-      <app-report-section />
-      <app-entry-timeline />
+      <app-clock-card class="block" />
+      <app-report-section class="block" />
+      <app-entry-timeline class="block" />
     </div>
 
     <button
