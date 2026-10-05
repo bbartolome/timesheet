@@ -35,97 +35,111 @@ function fromDatetimeLocal(value: string): string | null {
   imports: [DrawerComponent],
   template: `
     <app-drawer [open]="open()" [title]="title()" (closed)="close()">
-      <form class="flex flex-col gap-5" (submit)="$event.preventDefault(); save()">
-        <label class="flex flex-col gap-1 text-sm text-stone-400">
-          <span>Job</span>
+      @if (jobOptions().length === 0) {
+        <div class="flex flex-col gap-4">
+          <p class="text-sm text-stone-400">Create a Job first</p>
+          <button
+            type="button"
+            class="self-start rounded bg-amber-300 px-5 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-200"
+            (click)="openSettings()"
+          >
+            Open Settings
+          </button>
+        </div>
+      } @else {
+        <form class="flex flex-col gap-5" (submit)="$event.preventDefault(); save()">
+          <label for="entry-job" class="text-sm text-stone-400">Job</label>
           <select
             id="entry-job"
+            aria-label="Job"
             class="rounded bg-stone-700 px-3 py-2 text-stone-100"
             [value]="jobId()"
             (change)="onJobChange($event)"
           >
             @for (j of jobOptions(); track j.id) {
-              <option [value]="j.id">{{ j.name }}</option>
+              <option [value]="j.id" [selected]="j.id === jobId()">{{ j.name }}</option>
             }
           </select>
-        </label>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <label class="flex flex-col gap-1 text-sm text-stone-400">
-            <span>Start</span>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="flex flex-col gap-1">
+              <label for="entry-start" class="text-sm text-stone-400">Start</label>
+              <input
+                id="entry-start"
+                aria-label="Start"
+                type="datetime-local"
+                class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+                [value]="start()"
+                (input)="onStart($event)"
+              />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="entry-end" class="text-sm text-stone-400">End</label>
+              <input
+                id="entry-end"
+                aria-label="End"
+                type="datetime-local"
+                class="rounded bg-stone-700 px-3 py-2 text-stone-100"
+                [value]="end()"
+                (input)="onEnd($event)"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label for="entry-rate" class="text-sm text-stone-400">Entry Rate</label>
             <input
-              id="entry-start"
-              type="datetime-local"
-              class="rounded bg-stone-700 px-3 py-2 text-stone-100"
-              [value]="start()"
-              (input)="onStart($event)"
+              id="entry-rate"
+              aria-label="Entry Rate"
+              type="number"
+              min="0"
+              step="0.01"
+              class="rounded bg-stone-700 px-3 py-2 text-stone-100 disabled:bg-stone-800 disabled:text-stone-400"
+              [value]="rate()"
+              [disabled]="isEdit()"
+              (input)="onRate($event)"
             />
-          </label>
-          <label class="flex flex-col gap-1 text-sm text-stone-400">
-            <span>End</span>
-            <input
-              id="entry-end"
-              type="datetime-local"
-              class="rounded bg-stone-700 px-3 py-2 text-stone-100"
-              [value]="end()"
-              (input)="onEnd($event)"
-            />
-          </label>
-        </div>
+          </div>
 
-        <label class="flex flex-col gap-1 text-sm text-stone-400">
-          <span>Rate</span>
-          <input
-            id="entry-rate"
-            type="number"
-            min="0"
-            step="0.01"
-            class="rounded bg-stone-700 px-3 py-2 text-stone-100 disabled:bg-stone-800 disabled:text-stone-400"
-            [value]="rate()"
-            [disabled]="isEdit()"
-            (input)="onRate($event)"
-          />
-        </label>
-
-        <label class="flex flex-col gap-1 text-sm text-stone-400">
-          <span>Note</span>
+          <label for="entry-note" class="text-sm text-stone-400">Note</label>
           <input
             id="entry-note"
+            aria-label="Note"
             type="text"
             class="rounded bg-stone-700 px-3 py-2 text-stone-100"
             [value]="note()"
             (input)="onNote($event)"
           />
-        </label>
 
-        @if (overlapCount() > 0) {
-          <p class="text-sm text-amber-300">
-            Overlaps {{ overlapCount() }} existing entr{{ overlapCount() === 1 ? 'y' : 'ies' }}
-          </p>
-        }
-
-        @if (error() !== null) {
-          <div role="alert" class="text-sm text-red-400">{{ error() }}</div>
-        }
-
-        <div class="mt-2 flex items-center justify-end gap-3">
-          @if (isEdit()) {
-            <button
-              type="button"
-              class="rounded border border-stone-600 px-5 py-2 text-sm text-stone-400 transition-colors hover:border-red-400/60 hover:text-red-400"
-              (click)="delete()"
-            >
-              Delete
-            </button>
+          @if (overlapCount() > 0) {
+            <p class="text-sm text-amber-300">
+              Overlaps {{ overlapCount() }} existing entr{{ overlapCount() === 1 ? 'y' : 'ies' }}
+            </p>
           }
-          <button
-            type="submit"
-            class="rounded bg-amber-300 px-5 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-200"
-          >
-            Save
-          </button>
-        </div>
-      </form>
+
+          @if (error() !== null) {
+            <div role="alert" class="text-sm text-red-400">{{ error() }}</div>
+          }
+
+          <div class="mt-2 flex items-center justify-end gap-3">
+            @if (isEdit()) {
+              <button
+                type="button"
+                class="rounded border border-stone-600 px-5 py-2 text-sm text-stone-400 transition-colors hover:border-red-400/60 hover:text-red-400"
+                (click)="delete()"
+              >
+                Delete
+              </button>
+            }
+            <button
+              type="submit"
+              class="rounded bg-amber-300 px-5 py-2 text-sm font-semibold text-stone-900 transition-colors hover:bg-amber-200"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      }
     </app-drawer>
   `,
 })
@@ -261,20 +275,25 @@ export class EntryDrawerComponent {
   // ── actions ──────────────────────────────────────────────
   save(): void {
     const startIso = fromDatetimeLocal(this.start());
-    const endIso = this.end() === '' ? null : fromDatetimeLocal(this.end());
     if (startIso === null) {
       this.error.set('Please provide a start date');
       return;
     }
 
-    const rateValue = this.rate() === '' ? NaN : Number(this.rate());
-    const rate = Number.isFinite(rateValue) ? rateValue : undefined;
+    const endIso = fromDatetimeLocal(this.end());
+    const rateValue = this.rate() === '' ? undefined : Number(this.rate());
 
     try {
       if (this.isEdit()) {
         const entry = this.editingEntry();
         if (entry === null) {
           this.error.set('Entry no longer exists');
+          return;
+        }
+        // A completed entry may never be saved open-ended; the Live
+        // Session (end === null) may be edited without an end.
+        if (entry.end !== null && endIso === null) {
+          this.error.set('End is required');
           return;
         }
         this.store.updateEntry(entry.id, {
@@ -284,11 +303,17 @@ export class EntryDrawerComponent {
           note: this.note(),
         });
       } else {
+        // New entries always require an explicit end (only the Live
+        // Session, created via clockIn, may be open-ended).
+        if (endIso === null) {
+          this.error.set('End is required');
+          return;
+        }
         this.store.addEntry({
           jobId: this.jobId(),
           start: startIso,
           end: endIso,
-          rate,
+          rate: rateValue,
           note: this.note(),
         });
       }
@@ -304,6 +329,11 @@ export class EntryDrawerComponent {
     if (!window.confirm('Delete this entry?')) return;
     this.store.deleteEntry(entry.id);
     this.close();
+  }
+
+  openSettings(): void {
+    this.close();
+    this.ui.openSettings();
   }
 
   close(): void {
